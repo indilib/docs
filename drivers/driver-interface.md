@@ -83,7 +83,7 @@ Many of these interfaces have base classes you can and should inherit from if yo
 
 Each of these base classes have methods you must override for your driver to work correctly.
 They also take care of creating any
-[standard properties](https://indilib.org/developers/developer-manual/101-standard-properties.html)
+[standard properties](README.md#standard-properties)
 that your device type needs to implement.
 
 For example, if you want to implement a guider, you'll need to override these methods
