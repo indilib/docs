@@ -28,7 +28,7 @@ private: // serial connection
 Then we need to add this include:
 
 ```cpp
-#include <libindi/connectionplugins/connectionserial.h>
+#include "libindi/connectionplugins/connectionserial.h"
 ```
 
 to our cpp file.

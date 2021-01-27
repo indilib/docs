@@ -55,7 +55,7 @@ These would be called in `initProperties`.
     * Most device base classes have this method, and it allows you to define
     whether you can connect via serial, tcp, usb, custom, or any combination.
 
-### <libindi/indicom.h>
+### libindi/indicom.h
 
 #### Serial Communication
 
@@ -84,7 +84,7 @@ useful ones you will probably need.
 * `rangeDec`
     * Limits declination value to be in -90 to 90 range.
 
-### <libindi/indidevapi.h>
+### libindi/indidevapi.h
 
 #### INDI Driver Functions
 

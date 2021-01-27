@@ -34,51 +34,51 @@ You can let INDI know what you implement by calling `setDriverInterface` in `ini
 Many of these interfaces have base classes you can and should inherit from if you implmement the interface.
 
 * `TELESCOPE_INTERFACE`
-    * `<liibindi/inditelescope.h>`
+    * `liibindi/inditelescope.h`
     * `Telescope`
 
 * `CCD_INTERFACE`
-    * `<liibindi/indiccd.h>`
+    * `liibindi/indiccd.h`
     * `CCD`
 
 * `GUIDER_INTERFACE`
-    * `<libindi/indiguiderinterface.h>`
+    * `libindi/indiguiderinterface.h`
     * `GuiderInterface`
 
 * `FOCUSER_INTERFACE`
-    * `<libindi/indifocuser.h>`
+    * `libindi/indifocuser.h`
     * `Focuser`
 
 * `FILTER_INTERFACE`
-    * `<libindi/indifilterwheel.h>`
+    * `libindi/indifilterwheel.h`
     * `FilterWheel`
 
 * `DOME_INTERFACE`
-    * `<libindi/indidome.h>`
+    * `libindi/indidome.h`
     * `Dome`
 
 * `GPS_INTERFACE`
-    * `<libindi/indigps.h>`
+    * `libindi/indigps.h`
     * `GPS`
 
 * `WEATHER_INTERFACE`
-    * `<libindi/indiweather.h>`
+    * `libindi/indiweather.h`
     * `Weather`
 
 * `DETECTOR_INTERFACE`
-    * `<libindi/indidetector.h>`
+    * `libindi/indidetector.h`
     * `Detector`
 
 * `ROTATOR_INTERFACE`
-    * `<libindi/indirotator.h>`
+    * `libindi/indirotator.h`
     * `Rotator`
 
 * `SPECTROGRAPH_INTERFACE`
-    * `<libindi/indispectrograph.h>`
+    * `libindi/indispectrograph.h`
     * `Spectrograph`
 
 * `CORRELATOR_INTERFACE`
-    * `<libindi/indicorrelator.h>`
+    * `libindi/indicorrelator.h`
     * `Correlator`
 
 Each of these base classes have methods you must override for your driver to work correctly.

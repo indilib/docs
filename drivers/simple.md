@@ -13,7 +13,7 @@ that must be written to get a driver to run.
 ```cpp
 #pragma once
 
-#include <libindi/defaultdevice.h>
+#include "libindi/defaultdevice.h"
 
 class MyCustomDriver : public INDI::DefaultDevice
 {
@@ -25,6 +25,8 @@ public:
     virtual const char *getDefaultName() override;
 };
 ```
+
+### indi_mycustomdriver.cpp
 
 ```cpp
 #include "config.h"
