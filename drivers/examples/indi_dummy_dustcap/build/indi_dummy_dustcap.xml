@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<driversList>
-   <devGroup group="Auxiliary">
-      <device label="Dummy Dustcap" manufacturer="indi-dev-tutorials">
-         <driver name="Dummy Dustcap">indi_dummy_dustcap</driver>
-         <version>1.2</version>
-      </device>
-   </devGroup>
-</driversList>
