@@ -81,8 +81,72 @@ INDI clients are required to honor standard properties if when and they implemen
 
 Telescope standard properties define critical properties for the operation and control of the mount. In addition to the properties below, all properties in [INDI Alignment Subsystem](http://www.indilib.org/api/md_libs_indibase_alignment_alignment_white_paper.html) are considered standard properties as well and must be reserved in all implementations.
 
-| Name             | Type   | Values | Description                             |
-| ---------------- | ------ | ------ | --------------------------------------- |
-| EQUATORIAL_COORD | Number |        | Equatorial astrometric J2000 coordinate |
-|                  |        | RA     | J2000 RA, hours                         |
-|                  |        | DEC    | J2000 Dec, degrees +N                   |
+| Name                     | Type   | Values                 | Description                                                                                    |
+| ------------------------ | ------ | ---------------------- | ---------------------------------------------------------------------------------------------- |
+| EQUATORIAL_COORD         | Number |                        | Equatorial astrometric J2000 coordinate                                                        |
+|                          |        | RA                     | J2000 RA, hours                                                                                |
+|                          |        | DEC                    | J2000 Dec, degrees +N                                                                          |
+| EQUATORIAL_EOD_COORD     | Number |                        | Equatorial astrometric epoch of date coordinate                                                |
+|                          |        | RA                     | JNow RA, hours                                                                                 |
+|                          |        | DEC                    | JNow Dec, degrees +N                                                                           |
+| TARGET_EOD_COORD         | Number |                        | Slew Target. Read Only property set once requested EQUATORIAL_EOD_COORD is accepted by driver. |
+|                          |        | RA                     | JNow RA, hours                                                                                 |
+|                          |        | DEC                    | JNow Dec, degrees +N                                                                           |
+| HORIZONTAL_COORD         | Number |                        | topocentric coordinate                                                                         |
+|                          |        | ALT                    | Altitude, degrees above horizon                                                                |
+|                          |        | AZ                     | Azimuth, degrees E of N                                                                        |
+| ON_COORD_SET             | Switch |                        | Action device takes when sent any `*_COORD` property.                                          |
+|                          |        | SLEW                   | Slew to a coordinate and stop upon receiving coordinates.                                      |
+|                          |        | TRACK                  | Slew to a coordinate and track upon receiving coordinates.                                     |
+|                          |        | SYNC                   | Accept coordinate as current position upon receiving coordinates.                              |
+| TELESCOPE_MOTION_NS      | Switch |                        | Move telescope north or south                                                                  |
+|                          |        | MOTION_NORTH           | Move the telescope toward North.                                                               |
+|                          |        | MOTION_SOUTH           | Move the telescope toward South.                                                               |
+| TELESCOPE_MOTION_WE      | Switch |                        | Move telescope west or east                                                                    |
+|                          |        | MOTION_WEST            | Move the telescope toward West.                                                                |
+|                          |        | MOTION_EAST            | Move the telescope toward East.                                                                |
+| TELESCOPE_TIMED_GUIDE_NS | Number |                        | Timed pulse guide in north/south direction                                                     |
+|                          |        | TIMED_GUIDE_N          | Guide the scope north for TIMED_GUIDE_N milliseconds.                                          |
+|                          |        | TIMED_GUIDE_S          | Guide the scope south for TIMED_GUIDE_S milliseconds.                                          |
+| TELESCOPE_TIMED_GUIDE_WE | Number |                        | Timed pulse guide in north/south direction                                                     |
+|                          |        | TIMED_GUIDE_W          | Guide the scope west for TIMED_GUIDE_W milliseconds.                                           |
+|                          |        | TIMED_GUIDE_E          | Guide the scope east for TIMED_GUIDE_E milliseconds.                                           |
+| TELESCOPE_SLEW_RATE      | Switch |                        | Multiple switch slew rate.                                                                     |
+|                          |        | SLEW_GUIDE             | 0.5x to 1.0x sidereal rate or slowest possible speed.                                          |
+|                          |        | SLEW_CENTERING         | Slow speed.                                                                                    |
+|                          |        | SLEW_FIND              | Medium speed.                                                                                  |
+|                          |        | SLEW_MAX               | Maximum speed.                                                                                 |
+| TELESCOPE_PARK           | Switch |                        | Park and unpark the telescope.                                                                 |
+|                          |        | PARK                   | Park the telescope.                                                                            |
+|                          |        | UNPARK                 | Unpark the telescope.                                                                          |
+| TELESCOPE_PARK_POSITION  | Number |                        | Home park position (RA/DEC or AZ/ALT) in degrees or encoder ticks.                             |
+|                          |        | PARK_RA or PARK_AZ     | RA/AZ park coordinates in degrees or ticks.                                                    |
+|                          |        | PARK_DEC or PARK_ALT   | DEC/ALT park coordinates in degrees or ticks.                                                  |
+| TELESCOPE_PARK_OPTION    | Switch |                        | Updates TELESCOPE_PARK_POSITION values                                                         |
+|                          |        | PARK_CURRENT           | Use current coordinates/encoders as home park position.                                        |
+|                          |        | PARK_DEFAULT           | Use driver's default park position.                                                            |
+|                          |        | PARK_WRITE_DATA        | Write TELESCOPE_PARK_POSITION and current parking status to file ($HOME/.indi/ParkData.xml)    |
+| TELESCOPE_ABORT_MOTION   | Switch | ABORT_MOTION           | Stop telescope rapidly, but gracefully                                                         |
+| TELESCOPE_TRACK_RATE     | Switch |                        |                                                                                                |
+|                          |        | TRACK_SIDEREAL         | Track at sidereal rate.                                                                        |
+|                          |        | TRACK_SOLAR            | Track at solar rate.                                                                           |
+|                          |        | TRACK_LUNAR            | Track at lunar rate.                                                                           |
+|                          |        | TRACK_CUSTOM           | Custom track rate. This element is optional                                                    |
+| TELESCOPE_INFO           | Number |                        |                                                                                                |
+|                          |        | TELESCOPE_APERTURE     | Telescope aperture, mm                                                                         |
+|                          |        | TELESCOPE_FOCAL_LENGTH | Telescope focal length, mm                                                                     |
+|                          |        | GUIDER_APERTURE        | Guide telescope aperture, mm                                                                   |
+|                          |        | GUIDER_FOCAL_LENGTH    | Guider telescope focal length, mm                                                              |
+| TELESCOPE_PIER_SIDE      | Switch |                        | GEM Pier Side                                                                                  |
+|                          |        | PIER_EAST              | Mount on the East side of pier (Pointing West).                                                |
+|                          |        | PIER_WEST              | Mount on the West side of pier (Pointing East).                                                |
+#### Notes
+
+Setting the `ON_COORD_SET` property does not cause any action but it prepares the mount driver for the next action when any `*_COORD` number property is received. For example, to sync the mount, first set switch to `SYNC` and then send the `EQUATORIAL_EOD_COORD` with the desired sync coordinates.
+
+The driver can define as many `TELESCOPE_SLEW_RATE` switches as desirable, but at minimum should implement the four switches above.
+
+For clients that want to implement the GOTO functionality of a telescope, they should expect telescope drivers to define either:
+
+* `EQUATORIAL_EOD_COORD` for current Epoch; and/or
+* `HORIZONTAL_COORD`
