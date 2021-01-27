@@ -140,6 +140,7 @@ Telescope standard properties define critical properties for the operation and c
 | TELESCOPE_PIER_SIDE      | Switch |                        | GEM Pier Side                                                                                  |
 |                          |        | PIER_EAST              | Mount on the East side of pier (Pointing West).                                                |
 |                          |        | PIER_WEST              | Mount on the West side of pier (Pointing East).                                                |
+
 #### Notes
 
 Setting the `ON_COORD_SET` property does not cause any action but it prepares the mount driver for the next action when any `*_COORD` number property is received. For example, to sync the mount, first set switch to `SYNC` and then send the `EQUATORIAL_EOD_COORD` with the desired sync coordinates.
