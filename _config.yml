@@ -1,3 +1,4 @@
 remote_theme: rundocs/jekyll-rtd-theme
 exclude:
   - CNAME
+  - drivers/examples

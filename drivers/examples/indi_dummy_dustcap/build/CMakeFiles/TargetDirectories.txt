@@ -1,0 +1,7 @@
+/Users/rick/Projects/github.com/rickbassham/indi-dev-tutorials/drivers/indi_dummy_dustcap/build/CMakeFiles/install/local.dir
+/Users/rick/Projects/github.com/rickbassham/indi-dev-tutorials/drivers/indi_dummy_dustcap/build/CMakeFiles/install/strip.dir
+/Users/rick/Projects/github.com/rickbassham/indi-dev-tutorials/drivers/indi_dummy_dustcap/build/CMakeFiles/install.dir
+/Users/rick/Projects/github.com/rickbassham/indi-dev-tutorials/drivers/indi_dummy_dustcap/build/CMakeFiles/list_install_components.dir
+/Users/rick/Projects/github.com/rickbassham/indi-dev-tutorials/drivers/indi_dummy_dustcap/build/CMakeFiles/indi_dummy_dustcap.dir
+/Users/rick/Projects/github.com/rickbassham/indi-dev-tutorials/drivers/indi_dummy_dustcap/build/CMakeFiles/rebuild_cache.dir
+/Users/rick/Projects/github.com/rickbassham/indi-dev-tutorials/drivers/indi_dummy_dustcap/build/CMakeFiles/edit_cache.dir
