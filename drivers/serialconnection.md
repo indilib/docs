@@ -61,7 +61,9 @@ bool MyCustomDriver::Handshake()
         return true;
     }
 
-    PortFD = serialConnection->getPortFD();
+    // TODO: Any initial communciation needed with our device; we have an active
+    // connection with a valid file descriptor called PortFD. This file descriptor
+    // can be used with the tty_* functions in indicom.h
 
     return true;
 }
