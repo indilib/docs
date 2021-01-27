@@ -17,6 +17,8 @@ If you want to develop a new driver, it is recommended to create it separate fro
 
 ## Driver Construction
 
+Example drivers can be found at [in the repo for this documentation](https://github.com/indilib/docs/tree/master/drivers/examples/).
+
 An INDI driver is what directly communicates with your device(s) hardware. An INDI driver may control one or more hardware devices. It is responsible for controlling the device, and for representing the device properties to clients using INDI's protocol structures. *The driver does not contain a `main()`*, as it is expected to operate in an event-driven fashion. The core device class is `INDI::DefaultDevice`, and it encapsulates the functionality of the most basic INDI device driver.
 
 The driver must implement each `ISxxx()` function but never calls them. The `IS()` functions are called by the reference implementation `main()` as messages arrive from Clients. Within each `IS()` function the driver performs the desired tasks and then may report back to the Client by calling the `IDxxx()` functions. The INDI library provides routines for common tasks such as serial communication, string formatting & conversion, and XML parsing. `libnova`, an external optional library, provides facility for astronomical calculations, while `cfitsio` provides handling for FITS files.

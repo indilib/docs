@@ -30,4 +30,4 @@ enum
 } FocuserCapability;
 ```
 
-See the `indi_dummy_focuser` in this project for a barebones example of a focuser.
+See the [indi_dummy_focuser](https://github.com/indilib/docs/tree/master/drivers/examples/indi_dummy_focuser) in this project for a barebones example of a focuser.
