@@ -188,6 +188,6 @@ Receving new CCD Temperature: -20 C
 CCD temperature reached desired value!
 ```
 
-That's it! tt's that easy to write a client!
+That's it! It's that easy to write a client!
 
 Receving BLOBs: By default, INDI server does not send BLOBs to client unless the client explicitly sets BLOB handling mode by making a call to [`setBLOBMode()`](http://www.indilib.org/api/classINDI_1_1BaseClient.html#adb3740470ff9f9136f9a57e5560cd0ae) function. You can limit BLOB mode to a specific device and/or property.
