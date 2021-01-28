@@ -1,0 +1,10 @@
+name: 404 links
+
+on: [push]
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: restqa/404-links@v1.0.1

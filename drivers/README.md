@@ -286,4 +286,3 @@ Some CCD drivers support streaming and recording of video streams. All the prope
 #### Notes
 
 * `AUTOSYNC_THRESHOLD`: If dome is slaved, `AUTOSYNC_THRESHOLD` is the number of acceptable azimuth degrees error between reported and requested dome position. Once the difference between target and current dome positions exceed this value, the dome shall be commanded to move to the target position.
-
