@@ -218,6 +218,7 @@ Some CCD drivers support streaming and recording of video streams. All the prope
 |                    |        | RECORD_DURATION_ON       | Start recording until the duration set in `RECORD_OPTIONS` has elapsed.              |
 |                    |        | RECORD_FRAME_ON          | Start recording until the number of frames set in `RECOR_OPTIONS` has been captured. |
 |                    |        | RECORD_OFF               | Stops recording.                                                                     |
+
 #### Notes
 
 `STREAMING_EXPOSURE_VALUE` is advisory only as some streaming devices cannot control the exposure duration.
