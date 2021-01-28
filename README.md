@@ -83,6 +83,24 @@ INDI Library provides
 [Python client bindings](https://pypi.org/project/pyindi-client/) to access
 INDI server and drivers.
 
+## Getting INDI
+
+### Ubuntu
+
+* [INDI Stable PPA](https://launchpad.net/~mutlaqja/+archive/ubuntu/ppa)
+* [INDI Nightly PPA](https://launchpad.net/~mutlaqja/+archive/ubuntu/indinightly/)
+
+### Raspberry Pi
+
+* [Astroberry Repo](https://www.astroberry.io/repo/)
+
+### Source
+
+Instructions for building from source are available in the GitHub repos.
+
+* [INDI GitHub](https://github.com/indilib/indi)
+* [INDI 3rd Party GitHub](https://github.com/indilib/indi-3rdparty)
+
 ## Contributing
 
 As an open source project, you can contribute to making INDI better. See the
