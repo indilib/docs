@@ -195,3 +195,39 @@ For clients that want to implement the GOTO functionality of a telescope, they s
 
 Most `CCD_*` properties are also applicable to `GUIDER` chip, so replace `CCD` with `GUIDER` above to define properties for the `GUIDER` chip, if applicable.
 
+### CCD Streaming
+
+Some CCD drivers support streaming and recording of video streams. All the properties defined in `StreamManager` are considered reserved standard properties. The stream data is sent via the same CCD1 BLOB used for image transmission and therefore it is not possible to stream and send regular CCD captures at the same time.
+
+| Name               | Type   | Values                   | Description                                                                          |
+| ------------------ | ------ | ------------------------ | ------------------------------------------------------------------------------------ |
+| CCD_VIDEO_STREAM   | Switch | STREAM_ON                | Turn on video stream                                                                 |
+|                    |        | STREAM_OFF               | Turn off video stream                                                                |
+| STREAMING_EXPOSURE | Number | STREAMING_EXPOSURE_VALUE | Frame exposure values in seconds when streaming.                                     |
+|                    |        | STREAMING_DIVISOR_VALUE  | The divisor is used to skip frames as way to throttle the stream down.               |
+| FPS                | Number |                          | Read Only                                                                            |
+|                    |        | EST_FPS                  | Instant frame rate.                                                                  |
+|                    |        | AVG_FPS                  | Average FPS over 1 second.                                                           |
+| RECORD_FILE        | Text   | RECORD_FILE_DIR          | Directory to save the file. It defaults to $HOME/indi__D_                            |
+|                    |        | RECORD_FILE_NAME         | Recording file name. It defaults to indi_record__T_                                  |
+| RECORD_OPTIONS     | Switch |                          | Set the desired duration in seconds or total frames required for the recording.      |
+|                    |        | RECORD_DURATION          | Duration in seconds.                                                                 |
+|                    |        | RECORD_FRAME_TOTAL       | Total number of frames required                                                      |
+| RECORD_STREAM      | Switch |                          | Start or Stop the stream recording to a file.                                        |
+|                    |        | RECORD_ON                | Start recording. Do not stop unless asked to.                                        |
+|                    |        | RECORD_DURATION_ON       | Start recording until the duration set in `RECORD_OPTIONS` has elapsed.              |
+|                    |        | RECORD_FRAME_ON          | Start recording until the number of frames set in `RECOR_OPTIONS` has been captured. |
+|                    |        | RECORD_OFF               | Stops recording.                                                                     |
+#### Notes
+
+`STREAMING_EXPOSURE_VALUE` is advisory only as some streaming devices cannot control the exposure duration.
+
+`STREAMING_DIVISOR_VALUE` is used to skip frames. By default, a divisor value of 1 does not skip any frames. A value of two would skip every other frame (thereby cutting the FPS in half). A frame is skipped when the number of captured frames % divisor is equal to zero.
+
+`RECORD_FILE` Recorders are responsible for recording the video stream to a file. The recording file directory and name can be set via the RECORD_FILE property which is composed of RECORD_FILE_DIR and RECORD_FILE_NAME elements. You can specify a record directory name together with a file name. You may use special character sequences to generate dynamic names:
+
+* _D_ is replaced with the date ('YYYY-MM-DD')
+* _H_ is replaced with the time ('hh-mm-ss')
+* _T_ is replaced with a timestamp
+* _F_ is replaced with the filter name currently in use
+
