@@ -231,3 +231,26 @@ Some CCD drivers support streaming and recording of video streams. All the prope
 * _T_ is replaced with a timestamp
 * _F_ is replaced with the filter name currently in use
 
+### Filter Wheel Properties
+
+| Name        | Type   | Values            | Description                                                                         |
+| ----------- | ------ | ----------------- | ----------------------------------------------------------------------------------- |
+| FILTER_SLOT | Number | FILTER_SLOT_VALUE | The filter wheel's current slot number. Important: Filter numbers start from 1 to N |
+| FILTER_NAME | Text   | FILTER_NAME_VALUE | The filter wheel's current slot name                                                |
+
+### Focusers
+
+| Name                 | Type   | Values                  | Description                                                                                         |
+| -------------------- | ------ | ----------------------- | --------------------------------------------------------------------------------------------------- |
+| FOCUS_SPEED          | Number |                         | Select focus speed from 0 to N where 0 maps to no motion, and N maps to the fastest speed possible  |
+|                      |        | FOCUS_SPEED_VALUE       | Set focuser speed to SPEED                                                                          |
+| FOCUS_MOTION         | Switch | FOCUS_INWARD            | Focus inward                                                                                        |
+|                      |        | FOCUS_OUTWARD           | Focus outward                                                                                       |
+| FOCUS_TIMER          | Number | FOCUS_TIMER_VALUE       | Focus in the direction of `FOCUS_MOTION` at rate `FOCUS_SPEED` for `FOCUS_TIMER_VALUE` milliseconds |
+| REL_FOCUS_POSITION   | Number | FOCUS_RELATIVE_POSITION | Move # of steps in `FOCUS_MOTION` direction.                                                        |
+| ABS_FOCUS_POSITION   | Number | FOCUS_ABSOLUTE_POSITION | Move to this absolute position.                                                                     |
+| FOCUS_MAX            | Number | FOCUS_MAX_VALUE         | Focus maximum travel limit in steps.                                                                |
+| FOCUS_REVERSE_MOTION | Switch | ENABLED                 | Reverse default motor direction                                                                     |
+|                      |        | DISABLED                | Do not reverse, move motor in the default direction.                                                |
+| FOCUS_ABORT_MOTION   | Switch | ABORT                   | Abort focus motion.                                                                                 |
+| FOCUS_SYNC           | Number | FOCUS_SYNC_VALUE        | Accept this position as the new focuser absolute position.                                          |
