@@ -1,3 +1,6 @@
+---
+sort: 10
+---
 # Binary Transfers
 
 Thus far, the main focus was on control and monitoring oriented properties. These are the properties that represent the physical buttons, knobs, lights, status indicators, and switches in devices. But these properties only support the acquisition of data in specific formats (number or text).
@@ -29,7 +32,7 @@ To conclude, the basic steps for sending data to the client are the following:
 1. Allocate memory for your BLOB data.
 1. Compress your buffer, if desired.
 1. Assign your buffer pointer to BLOB property (e.g. blobProperty->blob = myBuffer).
-1. Specify data type in the format element. Append ".z" is compression is used.
+1. Specify data type in the format element. Append ".z" if compression is used.
 1. Specify blob size in bytes (size).
 1. Specify blob size in bytes when compressed (bloblen). If no compression is used, then this value should be equal to 'size' above.
 1. Send BLOB to client.
