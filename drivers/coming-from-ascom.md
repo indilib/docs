@@ -106,7 +106,7 @@ so you need a little more understanding of what's going on.
 
 The first line defines the name of the project, and the languages we are using.
 
-https://cmake.org/cmake/help/latest/command/project.html
+[CMake project](https://cmake.org/cmake/help/latest/command/project.html)
 
 ```cmake
 project(indi-mycustomdriver C CXX)
@@ -115,7 +115,7 @@ project(indi-mycustomdriver C CXX)
 And we tell cmake to setup linux standard folders. This will set some variables
 we can use in our `CMakeLists.txt` file later.
 
-https://cmake.org/cmake/help/latest/command/include.html
+[CMake include](https://cmake.org/cmake/help/latest/command/include.html)
 
 ```cmake
 include(GNUInstallDirs)
@@ -130,7 +130,7 @@ libindi and libnova.
 
 To tell cmake about these `Find*.cmake` files, we need to include them.
 
-https://cmake.org/cmake/help/latest/variable/CMAKE_MODULE_PATH.html
+[CMake CMAKE_MODULE_PATH](https://cmake.org/cmake/help/latest/variable/CMAKE_MODULE_PATH.html)
 
 ```cmake
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
@@ -138,7 +138,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 Then we tell cmake to find the packages we need:
 
-https://cmake.org/cmake/help/latest/command/find_package.html
+[CMake find_package](https://cmake.org/cmake/help/latest/command/find_package.html)
 
 ```cmake
 find_package(INDI REQUIRED)
@@ -149,7 +149,7 @@ If this is successful when we "configure" our project, it will set the
 
 Next we'll set some variables in cmake to use in our `config.h` and `xml` files:
 
-https://cmake.org/cmake/help/latest/command/set.html
+[CMake set](https://cmake.org/cmake/help/latest/command/set.html)
 
 ```cmake
 set(CDRIVER_VERSION_MAJOR 1)
@@ -158,7 +158,7 @@ set(CDRIVER_VERSION_MINOR 2)
 
 Now we tell cmake to do the replacements in those files:
 
-https://cmake.org/cmake/help/latest/command/configure_file.html
+[CMake configure_file](https://cmake.org/cmake/help/latest/command/configure_file.html)
 
 ```cmake
 # do the replacement in the config.h
@@ -182,7 +182,7 @@ C++ header files.
 
 Now we can tell cmake how to build our executable:
 
-https://cmake.org/cmake/help/latest/command/add_executable.html
+[CMake add_executable](https://cmake.org/cmake/help/latest/command/add_executable.html)
 
 ```cmake
 add_executable(
@@ -197,7 +197,7 @@ in this case, just the one.
 And tell cmake to link our executable to the actual shared libraries it found
 earlier (this is much like adding a "Reference" in .Net).
 
-https://cmake.org/cmake/help/latest/command/target_link_libraries.html
+[CMake target_link_libraries](https://cmake.org/cmake/help/latest/command/target_link_libraries.html)
 
 ```cmake
 target_link_libraries(
@@ -210,7 +210,7 @@ target_link_libraries(
 
 Finally, we need to tell cmake where to install our application.
 
-https://cmake.org/cmake/help/latest/command/install.html
+[CMake install](https://cmake.org/cmake/help/latest/command/install.html)
 
 ```cmake
 install(TARGETS indi_mycustomdriver RUNTIME DESTINATION bin)
@@ -296,7 +296,7 @@ let's make things easier on ourselves and use an IDE.
 
 First, install VS Code:
 
-Download the Ubuntu deb file from https://code.visualstudio.com/download
+Download the Ubuntu deb file from [the VSCode download page](https://code.visualstudio.com/download)
 and install with:
 
 ```bash
