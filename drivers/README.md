@@ -151,3 +151,47 @@ For clients that want to implement the GOTO functionality of a telescope, they s
 
 * `EQUATORIAL_EOD_COORD` for current Epoch; and/or
 * `HORIZONTAL_COORD`
+
+### CCD Properties
+
+| Name               | Type   | Values                | Description                                                                                              |
+| ------------------ | ------ | --------------------- | -------------------------------------------------------------------------------------------------------- |
+| CCD_EXPOSURE       | Number | CCD_EXPOSURE_VALUE    | Expose the CCD chip for CCD_EXPOSURE_VALUE seconds                                                       |
+| CCD_ABORT_EXPOSURE | Number | ABORT                 | Abort CCD exposure                                                                                       |
+| CCD_FRAME          | Number |                       | CCD frame size.                                                                                          |
+|                    |        | X                     | Left-most pixel position                                                                                 |
+|                    |        | Y                     | Top-most pixel position                                                                                  |
+|                    |        | WIDTH                 | Frame width in pixels                                                                                    |
+|                    |        | HEIGHT                | Frame height in pixels                                                                                   |
+| CCD_TEMPERATURE    | Number | CCD_TEMPERATURE_VALUE | CCD chip temperature in degrees Celsius                                                                  |
+| CCD_COOLER         | Switch |                       | CCD Cooler control.                                                                                      |
+|                    |        | COOLER_ON             | Turn cooler on                                                                                           |
+|                    |        | COOLER_OFF            | Turn cooler off                                                                                          |
+| CCD_FRAME_TYPE     | Switch |                       |                                                                                                          |
+|                    |        | FRAME_LIGHT           | Take a light frame exposure                                                                              |
+|                    |        | FRAME_BIAS            | Take a bias frame exposure                                                                               |
+|                    |        | FRAME_DARK            | Take a dark frame exposure                                                                               |
+|                    |        | FRAME_FLAT            | Take a flat field frame exposure                                                                         |
+| CCD_BINNING        | Number |                       |                                                                                                          |
+|                    |        | HOR_BIN               | Horizontal binning                                                                                       |
+|                    |        | VER_BIN               | Vertical binning                                                                                         |
+| CCD_COMPRESSION    | Switch |                       |                                                                                                          |
+|                    |        | CCD_COMPRESS          | Compress CCD frame (If FITS, it uses fpack to send a .fz file)                                           |
+|                    |        | CCD_RAW               | Send raw CCD frame                                                                                       |
+| CCD_FRAME_RESET    | Switch | RESET                 | Reset CCD frame to default X,Y,W, and H settings. Set binning to 1x1.                                    |
+| CCD_INFO           | Number |                       |                                                                                                          |
+|                    |        | CCD_MAX_X             | Resolution x                                                                                             |
+|                    |        | CCD_MAX_Y             | Resolution y                                                                                             |
+|                    |        | CCD_PIXEL_SIZE        | CCD pixel size in microns                                                                                |
+|                    |        | CCD_PIXEL_SIZE_X      | Pixel size X, microns                                                                                    |
+|                    |        | CCD_PIXEL_SIZE_Y      | Pixel size Y, microns                                                                                    |
+|                    |        | CCD_BITSPERPIXEL      | Bits per pixel                                                                                           |
+| CCD_CFA            | Text   |                       | Color Filter Array information if the CCD produces a bayered image. Debayering performed at client side. |
+|                    |        | CFA_OFFSET_X          | CFA X Offset.                                                                                            |
+|                    |        | CFA_OFFSET_Y          | CFA Y Offset.                                                                                            |
+|                    |        | CFA_TYPE              | CFA Filter type (e.g. RGGB).                                                                             |
+| CCD1               | BLOB   |                       | CCD1 for primary CCD, CCD2 for guider CCD.                                                               |
+|                    |        | CCD1                  | Binary fits data encoded in base64. The CCD1.format is used to indicate the data type (e.g. ".fits")     |
+
+Most `CCD_*` properties are also applicable to `GUIDER` chip, so replace `CCD` with `GUIDER` above to define properties for the `GUIDER` chip, if applicable.
+
