@@ -82,3 +82,12 @@ Supported operating systems include:
 INDI Library provides
 [Python client bindings](https://pypi.org/project/pyindi-client/) to access
 INDI server and drivers.
+
+## Contributing
+
+As an open source project, you can contribute to making INDI better. See the
+repositories above to make code contributions. You can also help make the
+documentation better by forking [the docs repo](https://github.com/indilib/docs/),
+making changes in your fork, and creating a merge request.
+
+Any help you can provide makes INDI a better project!
