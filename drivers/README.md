@@ -239,7 +239,7 @@ Some CCD drivers support streaming and recording of video streams. All the prope
 | FILTER_SLOT | Number | FILTER_SLOT_VALUE | The filter wheel's current slot number. Important: Filter numbers start from 1 to N |
 | FILTER_NAME | Text   | FILTER_NAME_VALUE | The filter wheel's current slot name                                                |
 
-### Focusers
+### Focuser Properties
 
 | Name                 | Type   | Values                  | Description                                                                                         |
 | -------------------- | ------ | ----------------------- | --------------------------------------------------------------------------------------------------- |
@@ -255,3 +255,35 @@ Some CCD drivers support streaming and recording of video streams. All the prope
 |                      |        | DISABLED                | Do not reverse, move motor in the default direction.                                                |
 | FOCUS_ABORT_MOTION   | Switch | ABORT                   | Abort focus motion.                                                                                 |
 | FOCUS_SYNC           | Number | FOCUS_SYNC_VALUE        | Accept this position as the new focuser absolute position.                                          |
+
+### Dome Properties
+
+| Name              | Type   | Values                 | Description                                                                                              |
+| ----------------- | ------ | ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| DOME_SPEED        | Number | DOME_SPEED_VALUE       | Set dome speed in RPM.                                                                                   |
+| DOME_MOTION       | Switch | DOME_CW                | Move dome Clockwise, looking down                                                                        |
+|                   |        | DOME_CCW               | Move dome counter clockwise, looking down                                                                |
+| DOME_TIMER        | Number | DOME_TIMER_VALUE       | Move the dome in the direction of `DOME_MOTION` at rate `DOME_SPEED` for `DOME_TIMER_VALUE` milliseconds |
+| REL_DOME_POSITION | Number | DOME_RELATIVE_POSITION | Move `DOME_RELATIVE_POSITION` degrees azimuth in the direction of `DOME_MOTION`.                         |
+| ABS_DOME_POSITION | Number | DOME_ABSOLUTE_POSITION | Move dome to `DOME_ABSOLUTE_POSITION` absolute azimuth angle in degrees.                                 |
+| DOME_ABORT_MOTION | Switch | ABORT                  | Abort dome motion.                                                                                       |
+| DOME_SHUTTER      | Switch | SHUTTER_OPEN           | Open dome shutter.                                                                                       |
+|                   |        | SHUTTER_CLOSE          | Close dome shutter.                                                                                      |
+| DOME_GOTO         | Switch | DOME_HOME              | Go to home position.                                                                                     |
+|                   |        | DOME_PARK              | Go to park position.                                                                                     |
+| DOME_PARAMS       | Number | HOME_POSITION          | Dome home position in absolute degrees azimuth.                                                          |
+|                   |        | PARK_POSITION          | Dome parking position in absolute degrees azimuth.                                                       |
+|                   |        | AUTOSYNC_THRESHOLD     | see note below                                                                                           |
+| DOME_AUTOSYNC     | Switch | DOME_AUTOSYNC_ENABLE   | Enable dome slaving.                                                                                     |
+|                   |        | DOME_AUTOSYNC_DISABLE  | Disable dome slaving.                                                                                    |
+| DOME_MEASUREMENTS | Number | DM_DOME_RADIUS         | Dome radius (m).                                                                                         |
+|                   |        | DOME_SHUTTER_WIDTH     | Dome shutter width (m).                                                                                  |
+|                   |        | DM_NORTH_DISPLACEMENT  | Displacement to the north of the mount center (m).                                                       |
+|                   |        | DM_EAST_DISPLACEMENT   | Displacement to the east of the mount center (m).                                                        |
+|                   |        | DM_UP_DISPLACEMENT     | UP displacement of the mount center (m).                                                                 |
+|                   |        | DM_OTA_OFFSET          | Distance from the optical axis to the mount center (m).                                                  |
+
+#### Notes
+
+* `AUTOSYNC_THRESHOLD`: If dome is slaved, `AUTOSYNC_THRESHOLD` is the number of acceptable azimuth degrees error between reported and requested dome position. Once the difference between target and current dome positions exceed this value, the dome shall be commanded to move to the target position.
+
