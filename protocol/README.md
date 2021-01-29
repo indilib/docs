@@ -60,3 +60,24 @@ INDI Client n --|                 |-- INDI Driver C -- Device T
 Client       INET     Server      UNIX    Driver      Hardware
 Processes   Sockets   Process     Pipes   Processes   Devices
 ```
+
+## Typical INDI Communication
+
+```mermaid
+sequenceDiagram
+    Client->>indiserver: connect on port 7624
+    Client->>indiserver: send `getProperties`
+    indiserver->>driver: call `ISGetProperties`
+
+    loop each property
+        driver->>indiserver: call `defineProperty`
+        indiserver->>Client: send `def*` xml message
+    end
+
+    Client->>indiserver: send `newSwitch`
+    indiserver->>driver: call `ISNewSwitch`
+    activate driver
+    Note right of driver: Respond to the new button click
+    driver->>indiserver: call `IDSetSwitch`
+    indiserver->>Client: send `setSwitch`
+```
