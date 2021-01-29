@@ -65,6 +65,8 @@ Processes   Sockets   Process     Pipes   Processes   Devices
 
 ```mermaid
 sequenceDiagram
+    %% https://mermaid-js.github.io/mermaid/#/sequenceDiagram
+
     Client->>indiserver: connect on port 7624
     Client->>indiserver: send `getProperties`
     indiserver->>driver: call `ISGetProperties`
