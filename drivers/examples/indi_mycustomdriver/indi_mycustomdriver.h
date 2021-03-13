@@ -18,7 +18,7 @@ public:
     virtual bool initProperties() override;
     virtual bool updateProperties() override;
 
-    virtual void ISGetProperties(const char *dev);
+    virtual void ISGetProperties(const char *dev) override;
     virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
                              int n) override;
     virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[],
