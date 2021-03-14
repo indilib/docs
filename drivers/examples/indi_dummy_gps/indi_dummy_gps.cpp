@@ -9,40 +9,6 @@
 // We declare an auto pointer to DummyGPS.
 static std::unique_ptr<DummyGPS> mydriver(new DummyGPS());
 
-// libindidriver will try to link to these functions, so they MUST exist.
-// Here we pass off handling of them to our driver's class.
-
-void ISGetProperties(const char *dev)
-{
-    mydriver->ISGetProperties(dev);
-}
-
-void ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
-{
-    mydriver->ISNewSwitch(dev, name, states, names, n);
-}
-
-void ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
-{
-    mydriver->ISNewText(dev, name, texts, names, n);
-}
-
-void ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
-{
-    mydriver->ISNewNumber(dev, name, values, names, n);
-}
-
-void ISNewBLOB(const char *dev, const char *name, int sizes[], int blobsizes[], char *blobs[],
-               char *formats[], char *names[], int n)
-{
-    mydriver->ISNewBLOB(dev, name, sizes, blobsizes, blobs, formats, names, n);
-}
-
-void ISSnoopDevice(XMLEle *root)
-{
-    mydriver->ISSnoopDevice(root);
-}
-
 DummyGPS::DummyGPS()
 {
     setVersion(CDRIVER_VERSION_MAJOR, CDRIVER_VERSION_MINOR);

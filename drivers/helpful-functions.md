@@ -146,7 +146,8 @@ These are meant to be called by a driver. These do NOT send any messages to a cl
 #### IS Functions
 
 If a function starts with `IS`, it should NEVER be called by a driver, but is used
-to receive messages from a client. All drivers MUST define these.
+to receive messages from a client.
+All drivers must define these or must inherit from INDI::DefaultDevice.
 
 * `ISGetProperties`
     * This function is called by the framework whenever the driver has received a
