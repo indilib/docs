@@ -80,19 +80,18 @@ Supported operating systems include:
 * Android: Client support only.
 
 INDI Library provides
-[Python client bindings](https://pypi.org/project/pyindi-client/) to access
-INDI server and drivers.
+[Python client bindings](https://github.com/indilib/pyindi-client) to access INDI server and drivers.
 
 ## Getting INDI
 
-### Ubuntu
+### Linux/Mac
 
-* [INDI Stable PPA](https://launchpad.net/~mutlaqja/+archive/ubuntu/ppa)
-* [INDI Nightly PPA](https://launchpad.net/~mutlaqja/+archive/ubuntu/indinightly/)
+* [INDI Downloads](https://indilib.org/get-indi.html)
 
 ### Raspberry Pi
 
 * [Astroberry Repo](https://www.astroberry.io/repo/)
+* [AstroPI3 Script](https://github.com/rlancaste/AstroPi3)
 
 ### Source
 
