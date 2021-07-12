@@ -4,3 +4,5 @@ _site
 vendor/
 Gemfile.lock
 .bundle
+.idea
+
