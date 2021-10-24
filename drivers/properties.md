@@ -276,11 +276,16 @@ bool MyCustomDriver::initProperties()
 
     return true;
 }
+```
 
-// change our log message to
+// Any where in the code you can log to the client the content of the property
+```cpp
 LOG_INFO(WhatToSayT[0].getText());
+```
 
+Next, since this property is read-write, the client can send new content for the property and we need to handle it.
 
+```cpp
 bool MyCustomDriver::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
 {
     // Make sure it is for us.
