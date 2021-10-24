@@ -147,13 +147,28 @@ An established naming convention is to end the value list with the first letter 
 We also override the `initProperties` method.
 
 ```cpp
+#include "indipropertyswitch.h"
+...
+
 public:
     virtual bool initProperties() override;
 
 private:
-    ISwitch SayHelloS[1] {}; // This is our array of values for the property.
-    ISwitchVectorProperty SayHelloSP; // This is the actual property vector.
+    INDI::PropertySwitch SayHelloSP {1}; // A switch propety with 1 element.
+    enum
+    {
+       HELLO_COMMAND
+    };
 ```
+
+Note the postfix **SP** we added to the property. This is part of the *property naming convention* adoped in INDI drivers. The postfix are fairly straightforward:
++ Switch: SP
++ Number: NP
++ Text: TP
++ Blob: BP
++ Light: LP
+
+When defining more than a single element, it is usually a good idea to define an enum to describe such elements. Do not rely on magic numbers! Above, we do not really need an enum since it is only a single-element property, but it was added for demonstration purposes.
 
 Now our class has a way to store it, but we need to tell INDI about it, so we move over to our `cpp` file.
 
@@ -165,17 +180,13 @@ bool MyCustomDriver::initProperties()
     // initialize the parent's properties first
     INDI::DefaultDevice::initProperties();
 
-    IUFillSwitch(
-        &SayHelloS[0], // A reference to the switch VALUE
-        "SAY_HELLO",   // The name of the VALUE
-        "Say Hello",   // The label of the VALUE
-        ISS_OFF        // The switch state
+    SayHelloSP[HELLO_COMMAND].fill(
+    "HELLO_COMMAND",// The name of the VALUE
+    "Say Hello",    // The label of the VALUE
+    ISS_OFF         // The switch state
     );
-
-    IUFillSwitchVector(
-        &SayHelloSP,      // A reference to the switch PROPERTY
-        SayHelloS,        // The list of switch values on this PROPERTY
-        1,                // How many switch values are there?
+    
+    SayHelloSP.fill(
         getDeviceName(),  // The name of the device
         "SAY_HELLO",      // The name of the PROPERTY
         "Hello Commands", // The label of the PROPERTY
@@ -216,20 +227,21 @@ bool MyCustomDriver::ISNewSwitch(const char *dev, const char *name, ISState *sta
 {
     if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
     {
-        if (strcmp(name, SayHelloSP.name) == 0)
+        if (SayHelloSP.isNameMatch(name))
         {
             // Log a message. This will show up in the control panel.
             LOG_INFO("Hello, world!");
 
             // Turn the switch back off
-            SayHelloS[0].s = ISS_OFF;
+            SayHelloS[HELLO_COMMAND].setState(ISS_OFF);
 
             // Set the property state back to idle
-            SayHelloSP.s = IPS_IDLE;
+            SayHelloSP.setState(IPS_IDLE);
 
             // And actually inform INDI of those two operations
-            IDSetSwitch(&SayHelloSP, nullptr);
-
+            SayHelloSP.apply();
+            
+            // We're done!
             return true;
         }
     }
@@ -244,28 +256,29 @@ Now if we run our driver and click the switch, we can see our message printed in
 But what about getting more info into the driver? Let's add a way to customize the text.
 
 ```cpp
+#include "indipropertytext.h"
+...
+
 public:
     virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[],
                            int n) override;
 private:
-    IText WhatToSayT[1] {};
-    ITextVectorProperty WhatToSayTP;
+    INDI::PropertyText WhatToSayTP {1};
 ```
 
 ```cpp
 bool MyCustomDriver::initProperties()
 {
     ...
-
-    IUFillText(&WhatToSayT[0], "WHAT_TO_SAY", "What to say?", "Hello, world!");
-    IUFillTextVector(&WhatToSayTP, WhatToSayT, 1, getDeviceName(), "WHAT_TO_SAY", "Got something to say?", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
+    WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", "Hello, world!");
+    WhatToSayTP.fill(getDeviceName(), "WHAT_TO_SAY", "Got something to say?", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
     defineProperty(&WhatToSayTP);
 
     return true;
 }
 
 // change our log message to
-LOG_INFO(WhatToSayT[0].text);
+LOG_INFO(WhatToSayT[0].getText());
 
 
 bool MyCustomDriver::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
@@ -273,16 +286,15 @@ bool MyCustomDriver::ISNewText(const char *dev, const char *name, char *texts[],
     // Make sure it is for us.
     if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
     {
-        if (strcmp(name, WhatToSayTP.name) == 0)
+        if (WhatToSayTP.isNameMatch(name))
         {
-            WhatToSayTP.s = IPS_IDLE;
-            // This is a helper method to just update the values
-            // on the property.
-            if (!IUUpdateText(&WhatToSayTP, texts, names, n))
-            {
-                return false;
-            }
-            IDSetText(&WhatToSayTP, nullptr);
+            // Update the property to what the client sent
+            // All elements in the property will now by synced with the client.
+            WhatToSayTP.update(texts, names, n);
+            // Set state to Idle
+            WhatToSayTP.setState(IPS_IDLE);
+            // Send back to client.
+            WhatToSayTP.apply();
             return true;
         }
     }
@@ -309,31 +321,26 @@ Let's have both a `Say Hello` and `Say Custom` button.
         SAY_HELLO_CUSTOM,
         SAY_HELLO_N,
     };
-    ISwitch SayHelloS[SAY_HELLO_N] {};
-    ISwitchVectorProperty SayHelloSP;
+    INDI::PropertySwitch SayHelloSP {SAY_HELLO_N};    
 ```
 
-So, now `SayHelloS` is an array with 2 values, instead of the 1 value we had before.
+So, now `SayHelloSP` is an array with 2 values, instead of the 1 value we had before.
 But we need to update `initProperties` to define the new switch value.
 
 ```cpp
-    IUFillSwitch(
-        &SayHelloS[SAY_HELLO_DEFAULT], // A reference to the switch VALUE
-        "SAY_HELLO_DEFAULT",           // The name of the VALUE
-        "Say Hello",                   // The label of the VALUE
-        ISS_OFF                        // The switch state
-    );
-    IUFillSwitch(
-        &SayHelloS[SAY_HELLO_CUSTOM], // A reference to the switch VALUE
-        "SAY_HELLO_CUSTOM",           // The name of the VALUE
-        "Say Custom",                 // The label of the VALUE
-        ISS_OFF                       // The switch state
-    );
-
-    IUFillSwitchVector(
-        &SayHelloSP,      // A reference to the switch PROPERTY
-        SayHelloS,        // The list of switch values on this PROPERTY
-        SAY_HELLO_N,      // How many switch values are there?
+    SayHelloSP[SAY_HELLO_DEFAULT].fill(
+        "SAY_HELLO_DEFAULT",    // The name of the VALUE
+        "Say Hello",            // The label of the VALUE
+        ISS_OFF                 // The switch state
+        );
+        
+    SayHelloSP[SAY_HELLO_CUSTOM].fill(
+        "SAY_HELLO_CUSTOM",     // The name of the VALUE
+        "Say Custom",           // The label of the VALUE
+        ISS_OFF                 // The switch state
+        );
+    
+    SayHelloSP.fill(
         getDeviceName(),  // The name of the device
         "SAY_HELLO",      // The name of the PROPERTY
         "Hello Commands", // The label of the PROPERTY
@@ -342,7 +349,7 @@ But we need to update `initProperties` to define the new switch value.
         ISR_ATMOST1,      // At most 1 can be on
         60,               // With a timeout of 60 seconds
         IPS_IDLE          // and an initial state of idle.
-    );
+    );        
 ```
 
 If you'll notice, we are using the enum values here so we don't have to remember indexes.
@@ -350,31 +357,31 @@ If you'll notice, we are using the enum values here so we don't have to remember
 And we need to handle the multiple switches in `ISNewSwitch`.
 
 ```cpp
-        if (strcmp(name, SayHelloSP.name) == 0)
+        if (SayHelloSP.isNameMatch(name))
         {
             // Accept what we received.
-            IUUpdateSwitch(&SayHelloSP, states, names, n);
+            SayHelloSP.update(states, names, n);
 
             // Find out what switch was clicked.
-            int index = IUFindOnSwitchIndex(&SayHelloSP);
+            int index = SayHelloSP.findOnSwitchIndex();
             switch (index)
             {
             case SAY_HELLO_DEFAULT: // see how much better this is than direct indexes? USE AN ENUM!
                 LOG_INFO("Hello, world!");
                 break;
             case SAY_HELLO_CUSTOM:
-                LOG_INFO(WhatToSayT[0].text);
+                LOG_INFO(WhatToSayT[0].getText());
                 break;
             }
 
             // Turn all switches back off.
-            IUResetSwitch(&SayHelloSP);
+            SayHelloSP.reset();
 
             // Set the property state back to idle
-            SayHelloSP.s = IPS_IDLE;
+            SayHelloSP.setState(IPS_IDLE);
 
             // And actually inform INDI of those two operations
-            IDSetSwitch(&SayHelloSP, nullptr);
+            SayHelloSP.apply();
 
             return true;
         }
@@ -411,7 +418,29 @@ and load it there.
 void MyCustomDriver::ISGetProperties(const char *dev)
 {
     DefaultDevice::ISGetProperties(dev);
-    loadConfig(true, WhatToSayTP.name);
+    
+    // This would simulate a client sending a new value using the value stored in the config file.    
+    loadConfig(true, WhatToSayTP.getName());    
+}
+```
+
+However, if you need to load a value from the config file on startup, the **recommended** method is to load it in initProperties:
+
+```cpp
+bool MyCustomDriver::initProperties()
+{    
+    ...
+    // We start by assigning the default value to a string
+    char configSay[256]={"Hello, world!"};
+    // Next we load the value, if any, from the config file. If the operation fails, we still have our default value.
+    // If the operation succeeds, we get the config value.
+    IUGetConfigText(getDeviceName(), "WHAT_TO_SAY", "WHAT_TO_SAY", &configSay, 256);
+    // Next we intilize the property like before. This time we set the initial text to configSay.
+    WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", configSay);
+    WhatToSayTP.fill(getDeviceName(), "WHAT_TO_SAY", "Got something to say?", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
+    defineProperty(&WhatToSayTP);
+
+    return true;
 }
 ```
 
@@ -422,8 +451,7 @@ To illustrate this, lets add a new "Say Count" property to our driver.
 
 ```cpp
 // header file
-    INumber SayCountN[1]{};
-    INumberVectorProperty SayCountNP;
+    INDI::PropertyNumber SayCountNP {1}
 ```
 
 ```cpp
@@ -431,25 +459,23 @@ bool MyCustomDriver::initProperties()
 {
     ...
     // and now let's add a counter of how many times the user clicks the button
-    IUFillNumber(&SayCountN[0], // First number VALUE in the property (and the only one)
-                 "SAY_COUNT",   // name of the VALUE
-                 "Count",       // label of the VALUE
-                 "%0.f",        // format specifier to show the value to the user; this should be a format specifier for a double
-                 0,             // minimum value; used by the client to render the UI
-                 0,             // maximum value; used by the client to render the UI
-                 0,             // step value; used by the client to render the UI
-                 0);            // current value
+    SayCountN[0].fill(
+                 "SAY_COUNT",       // name of the VALUE
+                 "Count",           // label of the VALUE
+                 "%0.f",            // format specifier to show the value to the user; this should be a format specifier for a double
+                 0,                 // minimum value; used by the client to render the UI
+                 0,                 // maximum value; used by the client to render the UI
+                 0,                 // step value; used by the client to render the UI
+                 0);                // current value
 
-    IUFillNumberVector(&SayCountNP,      // reference to the number PROPERTY
-                       SayCountN,        // Array of number values
-                       1,                // count of number values in the array
-                       getDeviceName(),  // device name
-                       "SAY_COUNT",      // PROPERTY name
-                       "Say Count",      // PROPERTY label
-                       MAIN_CONTROL_TAB, // What tab should we be on?
-                       IP_RO,            // Make this read-only
-                       0,                // With no timeout
-                       IPS_IDLE);        // and an initial state of idle
+    SayCountNP.fill(
+                getDeviceName(),    // device name
+                "SAY_COUNT",        // PROPERTY name
+                "Say Count",        // PROPERTY label
+                MAIN_CONTROL_TAB,   // What tab should we be on?
+                IP_RO,              // Make this read-only
+                0,                  // With no timeout
+                IPS_IDLE);          // and an initial state of idle
     ...
 }
 
@@ -488,9 +514,9 @@ bool MyCustomDriver::ISNewSwitch(const char *dev, const char *name, ISState *sta
             ...
             // Increment our "Say Count" counter.
             // Here we update the value on the property.
-            SayCountN[0].value = int(SayCountN[0].value) + 1;
+            SayCountN[0].setValue(SayCountN[0].getValue() + 1);
             // And then send a message to the clients to let them know it is updated.
-            IDSetNumber(&SayCountNP, nullptr);
+            SayCountNP.apply();
             ...
         }
     ...
@@ -500,8 +526,7 @@ bool MyCustomDriver::ISNewSwitch(const char *dev, const char *name, ISState *sta
 We are updating the value of the first VALUE on our PROPERTY, then sending the client
 a message showing it was updated, so the client can update the UI.
 
-All of the `IDSet*` functions are used to let the client know that a property was updated.
-We are telling the client that "[I]NDI [D]evice [Set] a [Number]" when we call `IDSetNumber`.
+All of the `property.apply()` functions are used to let the client know that a property was updated.
 
 See [helpful functions](helpful-functions.md) for more info.
 
