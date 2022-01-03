@@ -233,7 +233,7 @@ bool MyCustomDriver::ISNewSwitch(const char *dev, const char *name, ISState *sta
             LOG_INFO("Hello, world!");
 
             // Turn the switch back off
-            SayHelloS[HELLO_COMMAND].setState(ISS_OFF);
+            SayHelloSP[HELLO_COMMAND].setState(ISS_OFF);
 
             // Set the property state back to idle
             SayHelloSP.setState(IPS_IDLE);
