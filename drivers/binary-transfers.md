@@ -29,11 +29,29 @@ In astronomical applications, the most common data format is FITS. Therefore, th
 To conclude, the basic steps for sending data to the client are the following:
 
 1. Define INDI BLOB property.
-1. Allocate memory for your BLOB data.
-1. Compress your buffer, if desired.
-1. Assign your buffer pointer to BLOB property (e.g. blobProperty->blob = myBuffer).
-1. Specify data type in the format element. Append ".z" if compression is used.
-1. Specify blob size in bytes (size).
-1. Specify blob size in bytes when compressed (bloblen). If no compression is used, then this value should be equal to 'size' above.
-1. Send BLOB to client.
-1. Free memory resources allocated in step #2.
+2. Allocate memory for your BLOB data.
+3. Compress your buffer, if desired.
+4. Assign your buffer pointer to BLOB property (e.g. blobProperty->blob = myBuffer).
+5. Specify data type in the format element. Append ".z" if compression is used.
+6. Specify blob size in bytes (size).
+7. Specify blob size in bytes when compressed (bloblen). If no compression is used, then this value should be equal to 'size' above.
+8. Send BLOB to client.
+9. Free memory resources allocated in step #2.
+
+# Fast BLOBs
+
+Fast BLOBs are supported starting from INDI v1.9.7+. Ludovic Pollet introduced Fast BLOBS to enable support for local connection and fast memory buffer exchange in the INDI protocol.
+
+Working that way, data for BLOB (fits, stream, ...) needs no more being copied/base64 converted. The same memory is directly shared by driver to the client. This provides a significant reduction is CPU utilization and latency, especially on low-end HW.
+
+This works only for client/server located on the same Unix host. In that case, BLOB are written into buffers (shm or memfd) that are then exchanged by reference and shared & mmaped in the client. This is very lightweight compared to the existing base64 transfer.
+
+For remote connection, TCP is still supported for remote clients, unchanged. However, the shared buffer are used between driver and server, to eliminate handling there. In that case, the server handle the base64 encoding on a dedicated work thread.
+
+Client that attempts to connect to localhost will be redirected to the local socket of the unix domain to take advantage. It is possible to target a specific unix socket path by using the syntax: localhost:/path/to/socket (an arg to indiserver is available to decide the path it listen on)
+
+For client, since the existing semantic allows them to modify the blob data and that is not compatible with the new mechanism (blob are received as readonly), I added a new function for the client to explicitely allow readonly blob data. This removes one more copy of the data:
+
+`camera_client->enableDirectBlobAccess(MYCCD, nullptr);`
+
+There are further optimisations possible to avoid more memory copies, on the driver side (like producing the camera frame directly in the memory buffer instead of copying).
