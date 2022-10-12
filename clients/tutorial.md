@@ -3,147 +3,205 @@ sort: 1
 ---
 # Client Development Tutorial
 
-In this short tutorial, our client (`tutorial_client`) needs connect to an INDI server which may be running several drivers. However, we only need to receive information regarding the "CCD Simulator" driver. Once received, we try to set the temperature to -20 C. In order to establish a client, we need to subclass `INDI::BaseClient` and extend it as necessary.
+In this short tutorial, our client (`tutorial_client`) needs connect to an INDI server which may be running several drivers.
+However, we only need to receive information regarding the "Simple CCD" driver. Once received, we try to set the temperature to -20 C.
+In order to establish a client, we need to subclass `INDI::BaseClient`.
+
+To manipulate the selected device, we must first access it using the `watchDevice` method as the device can appear dynamically.
+The properties of the device are also dynamic, that is, they can come and go. To obtain access to selected properties, we use the `watchProperty` method, which informs us about availability and passes an object on which we can perform the operation of reading and writing the value.
 
 The source for this tutorial can be found [here](https://github.com/indilib/indi/tree/master/examples/tutorial_six).
 
 ## Building
-
-### myclient.h
+Let's follow the example code:
+### tutorial_client.h
 
 ```cpp
 class MyClient : public INDI::BaseClient
 {
- public:
-    MyClient();
-    ~MyClient();
-    void setTemperature();
-protected:
-    virtual void newDevice(INDI::BaseDevice *dp);
-    virtual void removeDevice(INDI::BaseDevice *dp) {}
-    virtual void newProperty(INDI::Property *property);
-    virtual void removeProperty(INDI::Property *property) {}
-    virtual void newBLOB(IBLOB *bp) {}
-    virtual void newSwitch(ISwitchVectorProperty *svp) {}
-    virtual void newNumber(INumberVectorProperty *nvp);
-    virtual void newMessage(INDI::BaseDevice *dp, int messageID);
-    virtual void newText(ITextVectorProperty *tvp) {}
-    virtual void newLight(ILightVectorProperty *lvp) {}
-    virtual void serverConnected() {}
-    virtual void serverDisconnected(int exit_code) {}
-private:
-   INDI::BaseDevice * ccd_simulator;
+    public:
+        MyClient();
+        ~MyClient() = default;
+
+    public:
+        void setTemperature(double value);
+        void takeExposure(double seconds);
+
+    protected:
+        void newMessage(INDI::BaseDevice *dp, int messageID) override;
+
+    private:
+        INDI::BaseDevice mSimpleCCD;
 };
 ```
+Above, we declare our class with the methods of interest to us.
+By inheriting from the `INDI::BaseClient` class, we get a whole set of functionalities that will allow us to communicate with the INDI server and to manipulate drivers.
+Additionally, the overwritten method `newMessage` will allow us to read messages from the server.
 
-Above we declared all the functions from `INDI::BaseMediator`. We will only implement a few of those for the purpose of the tutorial.
-
-### main.cpp
+### tutorial_client.cpp
 
 ```cpp
-#define MYCCD "Simple CCD"
-/* Our client auto pointer */
-auto_ptr camera_client(0);
-
-int main(int argc, char *argv[])
+int main(int, char *[])
 {
-    if (camera_client.get() == 0)
-        camera_client.reset(new MyClient());
+    MyClient myClient;
+    myClient.setServer("localhost", 7624);
 
-    camera_client->setServer("localhost", 7624);
-    camera_client->watchDevice(MYCCD);
-    camera_client->connectServer();
-    cout << "Press any key to terminate the client.\n";
-    string term;
-    cin >> term;
+    myClient.connectServer();
+
+    myClient.setBLOBMode(B_ALSO, "Simple CCD", nullptr);
+
+    myClient.enableDirectBlobAccess("Simple CCD", nullptr);
+
+    std::cout << "Press Enter key to terminate the client.\n";
+    std::cin.ignore();
 }
 ```
 
-In `main()`, we initiate the client object camera_client, then we set the server parameters. Note that by default, `INDI::BaseClient` will connect to an INDI server running on localhost and on port 7624. Next, we ask the client to only watch for a specific device. In case an INDI server is running multiple drivers, we are only interested in one or more devices. If `watchDevice()` is not set, `INDI::BaseClient` will fetch all devices from the INDI servers and build virtual device for each.
+In `main()`, we initiate the client object as myClient, then we set the server parameters.
+Note that by default, `INDI::BaseClient` will connect to an INDI server running on localhost and on port 7624.
 
-Finally, we connect to the server. Note that we're not checking for any error messages here to make it simple.
-
-What happens next is as following:
-
-1. `INDI::BaseClient` will attempt to connect to an INDI server.
-1. If successful, it issues a `getProperties` command to INDI server with the device CCD Simulator.
-1. Upon reception of the first device property from CCD Simulator, it issues newDevice and newProperty notifications.
-
-### myclient.cpp
-
-Here we ensure that the device received is indeed our simulator. Then we ask the client to gives us a pointer to the driver's instance for future use in the class.
+The whole process of detecting the device and properties we are interested in is entered in the constructor of our class,
+so that after connecting to the server, the `INDI::BaseClient` class can read the received information and inform us.
 
 ```cpp
-void MyClient::newDevice(INDI::BaseDevice *dp)
+MyClient::MyClient()
 {
-    if (!strcmp(dp->getDeviceName(), MYCCD))
+    // wait for the availability of the "Simple CCD" device
+    watchDevice("Simple CCD", [](INDI::BaseDevice device)
     {
-        IDLog("Receiving %s Device...\n", dp->getDeviceName());
-        ccd_simulator = dp;
-    }
-}
-```
-
-An important note to consider is that there is no way a client can tell whether or not we have received all the properties of a particular driver. This is because of the very nature of INDI protocol where devices are discovered via introspection. Therefore, the client may either choose to wait for a period of time until it begins processing the driver, or watch for a particular property of interest. Since we are planning to change the CCD temperature, we are interested in [INDI Standard Property](../drivers/README.md#standard-properties) `CCD_TEMPERATURE` which we will watch for in `newProperty()`.
-
-```cpp
-void MyClient::newProperty(INDI::Property *property)
-{
-    if (!strcmp(property->getDeviceName(), MYCCD) && !strcmp(property->getName(), "CONNECTION"))
-    {
-        connectDevice(MYCCD);
-        return;
-    }
-
-    if (!strcmp(property->getDeviceName(), MYCCD) && !strcmp(property->getName(), "CCD_TEMPERATURE"))
-    {
-        if (ccd_simulator->isConnected())
+        // wait for the availability of the "CONNECTION" property
+        device.watchProperty("CONNECTION", [](INDI::Property)
         {
-            IDLog("CCD is connected. Setting temperature to -20 C.\n");
-            setTemperature();
-        }
-        return;
-    }
+            /* ... */
+        });
+
+        // wait for the availability of the "CCD_TEMPERATURE" property
+        device.watchProperty("CCD_TEMPERATURE", [](INDI::PropertyNumber)
+        {
+            /* ... */
+        });
+
+        // wait for the availability of the "CCD1" property
+        device.watchProperty("CCD1", [](INDI::PropertyBlob)
+        {
+            /* ... */
+        });
+    });
 }
 ```
 
-Here we ensure we are receiving the correct property from the correct device, then we issue our first command to the CCD driver: `Connect`. If `setDriverConnection` is passed false instead, the client will issue a `Disconnect` command. Once the device is connected, it will define other properties, and we are interested in `CCD_TEMPERATURE` property. Once this property is defined, we ensure that the device is still connected, and then issue `setTemperature()` command.
+The names of the observed properties result from the structure of the given driver.
+In our case, for the `Simple CCD` driver, we are interested in:
+- `CONNECTION` - property of type `INDI::PropertySwitch`, however, if we are not interested in the property, but in its appearance, we can omit the variable name in the argument as its type, using the generic `INDI::Property`
+- `CCD_TEMPERATURE` - property of type `INDI::PropertyNumber`, to which we can enter the set temperature of the camera and read the current one
+- `CCD1` - property of type `INDI::PropertyBlob`, which stores the captured photo from the camera
+
+An important note to consider is that there is no way a client can tell whether or not we have received all the properties of a particular driver. This is because of the very nature of INDI protocol where devices are discovered via introspection. Therefore, the client may either choose to wait for a period of time until it begins processing the driver, or watch for a particular property of interest. Since we are planning to change the CCD temperature, we are interested in [INDI Standard Property](../drivers/README.md#standard-properties) `CCD_TEMPERATURE` which we will watch for.
+
+To detect the change of a given property, we use the `onUpdate` method, which calls the function we specified when the property is updated:
+```cpp
+device.watchProperty("CCD_TEMPERATURE", [](INDI::PropertyNumber property)
+{
+    // call lambda function if property changed
+    property.onUpdate([]()
+    {
+        // property changed!
+    });
+});
+
+```
+
+Now let's add an implementation that provides us with:
+1. after the appearance of the `CONNECT` property, connect to the device
+1. after the appearance of the property `CCD_TEMPERATURE`, set the temperature to -20 C
+1. when changing the property `CCD_TEMPERATURE`, display the current temperature, and when it reaches -20 C, take a picture
+1. if there is a new value for the property `CCD1`, save the picture to disk
 
 ```cpp
-void MyClient::setTemperature()
+MyClient::MyClient()
 {
-   INumberVectorProperty *ccd_temperature = NULL;
-   ccd_temperature = ccd_simulator->getNumber("CCD_TEMPERATURE");
-   if (ccd_temperature == NULL)
-   {
-       IDLog("Error: unable to find CCD Simulator CCD_TEMPERATURE property...\n");
-       return;
-   }
-   ccd_temperature->np[0].value = -20;
-   sendNewNumber(ccd_temperature);
+    // wait for the availability of the device
+    watchDevice("Simple CCD", [this](INDI::BaseDevice device)
+    {
+        mSimpleCCD = device; // save device
+
+        // wait for the availability of the "CONNECTION" property
+        device.watchProperty("CONNECTION", [this](INDI::Property)
+        {
+            IDLog("Connecting to INDI Driver...\n");
+            connectDevice("Simple CCD");
+        });
+
+        // wait for the availability of the "CCD_TEMPERATURE" property
+        device.watchProperty("CCD_TEMPERATURE", [this](INDI::PropertyNumber property)
+        {
+            if (mSimpleCCD.isConnected())
+            {
+                IDLog("CCD is connected.\n");
+                setTemperature(-20);
+            }
+
+            // call lambda function if property changed
+            property.onUpdate([property, this]()
+            {
+                IDLog("Receving new CCD Temperature: %g C\n", property[0].getValue());
+                if (property[0].getValue() == -20)
+                {
+                    IDLog("CCD temperature reached desired value!\n");
+                    takeExposure(1);
+                }
+            });
+        });
+
+        // wait for the availability of the "CCD1" property
+        device.watchProperty("CCD1", [](INDI::PropertyBlob property)
+        {
+            // call lambda function if property changed
+            property.onUpdate([property]()
+            {
+                // Save FITS file to disk
+                std::ofstream myfile;
+
+                myfile.open("ccd_simulator.fits", std::ios::out | std::ios::binary);
+                myfile.write(static_cast<char *>(property[0].getBlob()), property[0].getBlobLen());
+                myfile.close();
+
+                IDLog("Received image, saved as ccd_simulator.fits\n");
+            });
+        });
+    });
 }
 ```
 
-Here we get a pointer to the `CCD_TEMPERATURE` numeric property. If found (which we should since we just received it in `newProperty`), we set it to -20, and then call `sendNewNumber` to send the new value to the driver.
+We have already implemented device detection, reading properties and information about its change.
+Now let's move on to setting property values.
+
+```cpp
+void MyClient::setTemperature(double value)
+{
+    INDI::PropertyNumber ccdTemperature = mSimpleCCD.getProperty("CCD_TEMPERATURE");
+
+    if (!ccdTemperature.isValid())
+    {
+        IDLog("Error: unable to find Simple CCD, CCD_TEMPERATURE property...\n");
+        return;
+    }
+
+    IDLog("Setting temperature to %g C.\n", value);
+    ccdTemperature[0].setValue(value);
+    sendNewProperty(ccdTemperature);
+}
+```
+
+Here we use the `mSimpleCCD` variable that we got while watching the device to look for the property `CCD_TEMPERATURE` in order to change it.
+The `INDI::BaseDevice` and `INDI::PropertyXXX` classes are constructed in such a way that in the absence of a given property, the `isValid` method will return false.
+Then we set a new value and send it to the driver.
 
 Finally, we should be expecting the driver to comply and update the `CCD_TEMPERATURE` property.
 
-```cpp
-void MyClient::newNumber(INumberVectorProperty *nvp)
-{
-    // Let's check if we get any new values for CCD_TEMPERATURE
-    if (!strcmp(nvp->name, "CCD_TEMPERATURE"))
-    {
-       IDLog("Receving new CCD Temperature: %g C\n", nvp->np[0].value);
-       if (nvp->np[0].value == -20)
-           IDLog("CCD temperature reached desired value!\n");
-   }
-}
-```
-
 ## Running
 
-Open two console windows, and in each go to libindi cmake build directory (e.g. `/home/jsmith/libindi/build`) as these tutorials do not get installed to `/usr/bin`. On the first console, run `indiserver` with the CCD Simulator which is [tutorial_three](https://github.com/indilib/indi/tree/master/examples/tutorial_three):
+Open two console windows, and in each go to libindi cmake build directory (e.g. `/home/jsmith/libindi/build`) as these tutorials do not get installed to `/usr/bin`. On the first console, run `indiserver` with the Simple CCD which is [tutorial_three](https://github.com/indilib/indi/tree/master/examples/tutorial_three):
 
 ```bash
 indiserver ./tutorial_three
@@ -158,10 +216,10 @@ On the second console, run tutorial_client:
 If everything works fine, you should be getting the following output:
 
 ```
-Press any key to terminate the client.
-Receiving CCD Simulator Device...
-CCD_TEMPERATURE standard property defined. Attempting connection to CCD...
-CCD is connected. Setting temperature to -20 C.
+Press Enter key to terminate the client.
+Connecting to INDI Driver...
+CCD is connected.
+Setting temperature to -20 C.
 Receving new CCD Temperature: 0 C
 Receving new CCD Temperature: -1 C
 Receving new CCD Temperature: -2 C
@@ -184,8 +242,8 @@ Receving new CCD Temperature: -18 C
 Receving new CCD Temperature: -19 C
 Receving new CCD Temperature: -20 C
 CCD temperature reached desired value!
-Receving new CCD Temperature: -20 C
-CCD temperature reached desired value!
+Taking a 1 second exposure.
+Received image, saved as ccd_simulator.fits
 ```
 
 That's it! It's that easy to write a client!
