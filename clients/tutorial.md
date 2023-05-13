@@ -199,6 +199,49 @@ Then we set a new value and send it to the driver.
 
 Finally, we should be expecting the driver to comply and update the `CCD_TEMPERATURE` property.
 
+## New and Updated properties
+
+Client can receive notifications for any newly defined property or an updated value to an existing property. Once a device is first defined newDevice, it is not possible to know which device subtypes are supported by the driver up until DRIVER_INFO is first defined. The DRIVER_INFO.DRIVER_INTERFACE text property is a number that defines the interface(s) supported by the driver. This is an ORed list of interface (e.g. TELESCOPE_INTERFACE | CAMERA_INTERFACE | FOCUSER_INTERFACE)..etc.
+
+```cpp
+void MyClient::newProperty(INDI::Property property)
+{   
+    auto baseDevice = property.getBaseDevice();
+    auto deviceName = baseDevice.getDeviceName();
+ 
+    // With DRIVER_INFO defined, we have access to getDriverInterface()
+    if (property.isNameMatch("DRIVER_INFO"))
+    {
+        auto interface = baseDevice.getDriverInterface();
+        if (interface & BaseDevice::TELESCOPE_INTERFACE)
+        {
+            IDLog("Found telescope: %s\n", deviceName);
+        }
+        else if (interface & BaseDevice::CCD_INTERFACE)
+        {
+            IDLog("Found camera: %s\n", deviceName);            
+            setBLOBMode(B_ALSO, deviceName, nullptr);
+            enableDirectBlobAccess(deviceName, nullptr);
+        }
+    }
+}
+```
+
+In any property is updated from the server, it can be inspected in updateProperty
+
+```cpp
+void MyClient::updateProperty(INDI::Property property)
+{       
+    if (property.isNameMatch("CCD_TEMPERATURE"))
+    {
+        // Need to use .getNumber to convert the generic property to a NUMBER property.
+        // Then we access its first number elemenet and retrieve the value.
+        auto value = property.getNumber()->at(0).getValue();
+        LOGF_INFO("Temperature is %.2f C", value);
+    }
+}
+```
+
 ## Running
 
 Open two console windows, and in each go to libindi cmake build directory (e.g. `/home/jsmith/libindi/build`) as these tutorials do not get installed to `/usr/bin`. On the first console, run `indiserver` with the Simple CCD which is [tutorial_three](https://github.com/indilib/indi/tree/master/examples/tutorial_three):
