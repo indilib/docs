@@ -18,6 +18,10 @@ First, some helpful links:
   * [libnova](http://libnova.sourceforge.net/)
   * [libgsl](https://www.gnu.org/software/gsl/)
   * [libcfitsio](https://heasarc.gsfc.nasa.gov/fitsio/)
+* **Bundled** Header-only Libraries
+  The following C++ header-only libraries are included with libindi and may be used by any driver to handle common tasks around JSON and RESTful web services.
+  * [json](https://github.com/nlohmann/json): Write & parse JSON in INDI drivers.
+  * [httplib](https://github.com/yhirose/cpp-httplib): Create http(s) servers and clients. Make GET/POST/PUT calls for RESTful services.
 
 ## Introduction
 
