@@ -181,9 +181,9 @@ bool MyCustomDriver::initProperties()
     INDI::DefaultDevice::initProperties();
 
     SayHelloSP[HELLO_COMMAND].fill(
-    "HELLO_COMMAND",// The name of the VALUE
-    "Say Hello",    // The label of the VALUE
-    ISS_OFF         // The switch state
+        "HELLO_COMMAND",// The name of the VALUE
+        "Say Hello",    // The label of the VALUE
+        ISS_OFF         // The switch state
     );
     
     SayHelloSP.fill(
@@ -203,7 +203,7 @@ bool MyCustomDriver::initProperties()
     // any time. Maybe you don't want it to show until you are connected, or
     // until the user does something else? Maybe you want to connect, query your
     // device, then call this. It's up to you.
-    defineProperty(&SayHelloSP);
+    defineProperty(SayHelloSP);
 
     return true;
 }
@@ -213,41 +213,26 @@ Now if we build and install the driver again, when we load it up in Ekos and loo
 
 But it doesn't do anything at the moment. Let's fix that.
 
-When a user clicks on a switch, a command get's sent through INDI that will trigger the `ISNewSwitch` method on our class (these methods also exist for the other property types; can you guess what they are named?). So we need to override it.
-
+When a user clicks on a switch, a command get's sent through INDI that will update the data and trigger the function provided in the `onUpdate` method.
 ```cpp
-public:
-    virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
-                             int n) override;
-```
-
-```cpp
-bool MyCustomDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
-                                 int n)
+bool MyCustomDriver::initProperties()
 {
-    if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
+    ...
+    SayHelloSP.onUpdate([this]
     {
-        if (SayHelloSP.isNameMatch(name))
-        {
-            // Log a message. This will show up in the control panel.
-            LOG_INFO("Hello, world!");
+        // Log a message. This will show up in the control panel.
+        LOG_INFO("Hello, world!");
 
-            // Turn the switch back off
-            SayHelloSP[HELLO_COMMAND].setState(ISS_OFF);
+        // Turn the switch back off
+        SayHelloSP.reset();
 
-            // Set the property state back to idle
-            SayHelloSP.setState(IPS_IDLE);
+        // Set the property state back to idle
+        SayHelloSP.setState(IPS_IDLE);
 
-            // And actually inform INDI of those two operations
-            SayHelloSP.apply();
-            
-            // We're done!
-            return true;
-        }
-    }
-
-    // Nobody has claimed this, so let the parent handle it
-    return INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n);
+        // And actually inform INDI of those two operations
+        SayHelloSP.apply();
+    });
+    ...
 }
 ```
 
@@ -259,9 +244,6 @@ But what about getting more info into the driver? Let's add a way to customize t
 #include "indipropertytext.h"
 ...
 
-public:
-    virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[],
-                           int n) override;
 private:
     INDI::PropertyText WhatToSayTP {1};
 ```
@@ -269,11 +251,11 @@ private:
 ```cpp
 bool MyCustomDriver::initProperties()
 {
-    ...
-    WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", "Hello, world!");
+    /* ... */
+    WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", "Hello, custom world!");
     WhatToSayTP.fill(getDeviceName(), "WHAT_TO_SAY", "Got something to say?", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
-    defineProperty(&WhatToSayTP);
-
+    defineProperty(WhatToSayTP);
+    /* ... */
     return true;
 }
 ```
@@ -286,26 +268,18 @@ LOG_INFO(WhatToSayT[0].getText());
 Next, since this property is read-write, the client can send new content for the property and we need to handle it.
 
 ```cpp
-bool MyCustomDriver::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
+bool MyCustomDriver::initProperties()
 {
-    // Make sure it is for us.
-    if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
+    ...
+    WhatToSayTP.onUpdate([this]
     {
-        if (WhatToSayTP.isNameMatch(name))
-        {
-            // Update the property to what the client sent
-            // All elements in the property will now by synced with the client.
-            WhatToSayTP.update(texts, names, n);
-            // Set state to Idle
-            WhatToSayTP.setState(IPS_IDLE);
-            // Send back to client.
-            WhatToSayTP.apply();
-            return true;
-        }
-    }
+        WhatToSayTP.setState(IPS_IDLE);
 
-    // Nobody has claimed this, so let the parent handle it
-    return INDI::DefaultDevice::ISNewText(dev, name, texts, names, n);
+        // Tell the client they were updated
+        WhatToSayTP.apply();
+    });
+    ...
+    return true;
 }
 ```
 
@@ -337,13 +311,13 @@ But we need to update `initProperties` to define the new switch value.
         "SAY_HELLO_DEFAULT",    // The name of the VALUE
         "Say Hello",            // The label of the VALUE
         ISS_OFF                 // The switch state
-        );
-        
+    );
+
     SayHelloSP[SAY_HELLO_CUSTOM].fill(
         "SAY_HELLO_CUSTOM",     // The name of the VALUE
         "Say Custom",           // The label of the VALUE
         ISS_OFF                 // The switch state
-        );
+    );
     
     SayHelloSP.fill(
         getDeviceName(),  // The name of the device
@@ -359,42 +333,42 @@ But we need to update `initProperties` to define the new switch value.
 
 If you'll notice, we are using the enum values here so we don't have to remember indexes.
 
-And we need to handle the multiple switches in `ISNewSwitch`.
+Now we need extend the `onUpdate` implementation of `SayHelloSP` to display a message depending on the button pressed.
 
 ```cpp
-        if (SayHelloSP.isNameMatch(name))
+bool MyCustomDriver::initProperties()
+{
+    ...
+    SayHelloSP.onUpdate([this]
+    {
+        // Find out what switch was clicked.
+        switch (SayHelloSP.findOnSwitchIndex())
         {
-            // Accept what we received.
-            SayHelloSP.update(states, names, n);
-
-            // Find out what switch was clicked.
-            int index = SayHelloSP.findOnSwitchIndex();
-            switch (index)
-            {
-            case SAY_HELLO_DEFAULT: // see how much better this is than direct indexes? USE AN ENUM!
-                LOG_INFO("Hello, world!");
-                break;
-            case SAY_HELLO_CUSTOM:
-                LOG_INFO(WhatToSayT[0].getText());
-                break;
-            }
-
-            // Turn all switches back off.
-            SayHelloSP.reset();
-
-            // Set the property state back to idle
-            SayHelloSP.setState(IPS_IDLE);
-
-            // And actually inform INDI of those two operations
-            SayHelloSP.apply();
-
-            return true;
+        case SAY_HELLO_DEFAULT:
+            LOG_INFO("Hello, world!");
+            break;
+        case SAY_HELLO_CUSTOM:
+            LOG_INFO(WhatToSayTP[0].getText());
+            break;
         }
+
+        // Turn all switches back off.
+        SayHelloSP.reset();
+
+        // Set the property state back to idle
+        SayHelloSP.setState(IPS_IDLE);
+
+        // And actually inform INDI of those two operations
+        SayHelloSP.apply();
+    });
+    ...
+    return true;
+}
 ```
 
 Now we can click either button, and either get `Hello, world!` or our custom text. Hooray!
 
-But every time we restart the driver, we go back to the default of `Hello, world!`.
+But every time we restart the driver, we go back to the default of `Hello, custom world!`.
 Can we remember these between sessions? Yes we can!
 
 This part's easy. We just need to override `saveConfigItems` to tell it what to save.
@@ -408,7 +382,7 @@ protected:
 bool MyCustomDriver::saveConfigItems(FILE *fp)
 {
     INDI::DefaultDevice::saveConfigItems(fp);
-    IUSaveConfigText(fp, &WhatToSayTP);
+    WhatToSayTP.save(fp);
 
     return true;
 }
@@ -424,8 +398,8 @@ void MyCustomDriver::ISGetProperties(const char *dev)
 {
     DefaultDevice::ISGetProperties(dev);
     
-    // This would simulate a client sending a new value using the value stored in the config file.    
-    loadConfig(true, WhatToSayTP.getName());    
+    // This would simulate a client sending a new value using the value stored in the config file.
+    loadConfig(WhatToSayTP);
 }
 ```
 
@@ -465,22 +439,25 @@ bool MyCustomDriver::initProperties()
     ...
     // and now let's add a counter of how many times the user clicks the button
     SayCountN[0].fill(
-                 "SAY_COUNT",       // name of the VALUE
-                 "Count",           // label of the VALUE
-                 "%0.f",            // format specifier to show the value to the user; this should be a format specifier for a double
-                 0,                 // minimum value; used by the client to render the UI
-                 0,                 // maximum value; used by the client to render the UI
-                 0,                 // step value; used by the client to render the UI
-                 0);                // current value
+        "SAY_COUNT",      // name of the VALUE
+        "Count",          // label of the VALUE
+        "%0.f",           // format specifier to show the value to the user;
+                          // this should be a format specifier for a double
+        0,                // minimum value; used by the client to render the UI
+        0,                // maximum value; used by the client to render the UI
+        0,                // step value; used by the client to render the UI
+        0                 // current value
+    );
 
     SayCountNP.fill(
-                getDeviceName(),    // device name
-                "SAY_COUNT",        // PROPERTY name
-                "Say Count",        // PROPERTY label
-                MAIN_CONTROL_TAB,   // What tab should we be on?
-                IP_RO,              // Make this read-only
-                0,                  // With no timeout
-                IPS_IDLE);          // and an initial state of idle
+        getDeviceName(),  // device name
+        "SAY_COUNT",      // PROPERTY name
+        "Say Count",      // PROPERTY label
+        MAIN_CONTROL_TAB, // What tab should we be on?
+        IP_RO,            // Make this read-only
+        0,                // With no timeout
+        IPS_IDLE          // and an initial state of idle
+    );
     ...
 }
 
@@ -491,12 +468,12 @@ bool MyCustomDriver::updateProperties()
     if (isConnected())
     {
         ...
-        defineProperty(&SayCountNP);
+        defineProperty(SayCountNP);
     }
     else
     {
         ...
-        deleteProperty(SayCountNP.name);
+        deleteProperty(SayCountNP);
     }
 
     return true;
@@ -506,25 +483,26 @@ bool MyCustomDriver::updateProperties()
 Now we need to update the count every time the user clicks one of the "Say..."
 switches.
 
-We know from above that our driver's `ISNewSwitch` method is called when the user
-activates a switch, so let's add some code there.
+We know from above that the function specified in the `onUpdate` method for our property is called when the user
+activates the switch, so let's add a new implementation.
 
 ```cpp
-bool MyCustomDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
-                                 int n)
+bool MyCustomDriver::initProperties()
 {
     ...
-        if (strcmp(name, SayHelloSP.name) == 0)
-        {
-            ...
-            // Increment our "Say Count" counter.
-            // Here we update the value on the property.
-            SayCountN[0].setValue(SayCountN[0].getValue() + 1);
-            // And then send a message to the clients to let them know it is updated.
-            SayCountNP.apply();
-            ...
-        }
+    SayHelloSP.onUpdate([this]
+    {
+        ...
+        // Increment our "Say Count" counter.
+        // Here we update the value on the property.
+        SayCountNP[0].setValue(SayCountNP[0].getValue() + 1);
+        // And then send a message to the clients to let them know it is updated.
+        SayCountNP.apply();
+        ...
+
+    }
     ...
+    return true;
 }
 ```
 

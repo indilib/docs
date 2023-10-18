@@ -25,23 +25,22 @@ bool MyCustomDriver::initProperties()
     // initialize the parent's properties first
     INDI::DefaultDevice::initProperties();
 
-    IUFillSwitch(
-        &SayHelloS[SAY_HELLO_DEFAULT], // A reference to the switch VALUE
-        "SAY_HELLO_DEFAULT",           // The name of the VALUE
-        "Say Hello",                   // The label of the VALUE
-        ISS_OFF                        // The switch state
-    );
-    IUFillSwitch(
-        &SayHelloS[SAY_HELLO_CUSTOM], // A reference to the switch VALUE
-        "SAY_HELLO_CUSTOM",           // The name of the VALUE
-        "Say Custom",                 // The label of the VALUE
-        ISS_OFF                       // The switch state
+    // A reference to the switch VALUE
+    SayHelloSP[SAY_HELLO_DEFAULT].fill(
+        "SAY_HELLO_DEFAULT",  // The name of the VALUE
+        "Say Hello",          // The label of the VALUE
+        ISS_OFF               // The switch state
     );
 
-    IUFillSwitchVector(
-        &SayHelloSP,      // A reference to the switch PROPERTY
-        SayHelloS,        // The list of switch values on this PROPERTY
-        SAY_HELLO_N,      // How many switch values are there?
+    // A reference to the switch VALUE
+    SayHelloSP[SAY_HELLO_CUSTOM].fill(
+        "SAY_HELLO_CUSTOM",   // The name of the VALUE
+        "Say Custom",         // The label of the VALUE
+        ISS_OFF               // The switch state
+    );
+
+    // A reference to the switch PROPERTY
+    SayHelloSP.fill(
         getDeviceName(),  // The name of the device
         "SAY_HELLO",      // The name of the PROPERTY
         "Hello Commands", // The label of the PROPERTY
@@ -52,35 +51,81 @@ bool MyCustomDriver::initProperties()
         IPS_IDLE          // and an initial state of idle.
     );
 
+    SayHelloSP.onUpdate([this]
+    {
+        // Find out what switch was clicked.
+        switch (SayHelloSP.findOnSwitchIndex())
+        {
+        case SAY_HELLO_DEFAULT:
+            LOG_INFO("Hello, world!");
+            break;
+        case SAY_HELLO_CUSTOM:
+            LOG_INFO(WhatToSayTP[0].getText());
+            break;
+        }
+
+        // Increment our "Say Count" counter.
+        // Here we update the value on the property.
+        SayCountNP[0].setValue(SayCountNP[0].getValue() + 1);
+
+        // And then send a message to the clients to let them know it is updated.
+        SayCountNP.apply();
+
+        // Turn all switches back off.
+        SayHelloSP.reset();
+
+        // Set the property state back to idle
+        SayHelloSP.setState(IPS_IDLE);
+
+        // And actually inform INDI of those two operations
+        SayHelloSP.apply();
+    });
+
     // now we register the property with the DefaultDevice
     // without this, the property won't show up on the control panel
     // but let's do that in updateProperties when we are connected now
     // defineProperty(&SayHelloSP);
 
-    IUFillText(&WhatToSayT[0], "WHAT_TO_SAY", "What to say?", "Hello, world!");
-    IUFillTextVector(&WhatToSayTP, WhatToSayT, 1, getDeviceName(), "WHAT_TO_SAY", "Got something to say?", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
+    WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", "Hello, custom world!");
+    WhatToSayTP.fill(getDeviceName(), "WHAT_TO_SAY", "Got something to say?", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
     // defineProperty(&WhatToSayTP); // we moved this to updateProperties below
 
     // and now let's add a counter of how many times the user clicks the button
-    IUFillNumber(&SayCountN[0], // First number VALUE in the property (and the only one)
-                 "SAY_COUNT",   // name of the VALUE
-                 "Count",       // label of the VALUE
-                 "%0.f",        // format specifier to show the value to the user; this should be a format specifier for a double
-                 0,             // minimum value; used by the client to render the UI
-                 0,             // maximum value; used by the client to render the UI
-                 0,             // step value; used by the client to render the UI
-                 0);            // current value
+    // First number VALUE in the property (and the only one)
+    SayCountNP[0].fill(
+        "SAY_COUNT",  // name of the VALUE
+        "Count",      // label of the VALUE
+        "%0.f",       // format specifier to show the value to the user; this should be a format specifier for a double
+        0,            // minimum value; used by the client to render the UI
+        0,            // maximum value; used by the client to render the UI
+        0,            // step value; used by the client to render the UI
+        0             // current value
+    );
 
-    IUFillNumberVector(&SayCountNP,      // reference to the number PROPERTY
-                       SayCountN,        // Array of number values
-                       1,                // count of number values in the array
-                       getDeviceName(),  // device name
-                       "SAY_COUNT",      // PROPERTY name
-                       "Say Count",      // PROPERTY label
-                       MAIN_CONTROL_TAB, // What tab should we be on?
-                       IP_RO,            // Make this read-only
-                       0,                // With no timeout
-                       IPS_IDLE);        // and an initial state of idle
+    SayCountNP.fill(
+        getDeviceName(),  // device name
+        "SAY_COUNT",      // PROPERTY name
+        "Say Count",      // PROPERTY label
+        MAIN_CONTROL_TAB, // What tab should we be on?
+        IP_RO,            // Make this read-only
+        0,                // With no timeout
+        IPS_IDLE          // and an initial state of idle
+    );
+
+    WhatToSayTP.onUpdate([this]
+    {
+        WhatToSayTP.setState(IPS_IDLE);
+
+        // Tell the clien tthey were updated
+        WhatToSayTP.apply();
+
+        // This is a really important value, so make sure we save it every time
+        // the user sets it. Don't wait for the user to click the save
+        // button in options...
+        // You probably don't want to do this for all your properties, but
+        // you might for some.
+        saveConfig(WhatToSayTP);
+    });
 
     addAuxControls();
 
@@ -95,8 +140,8 @@ bool MyCustomDriver::initProperties()
 
 void MyCustomDriver::ISGetProperties(const char *dev)
 {
+    loadConfig(WhatToSayTP);
     DefaultDevice::ISGetProperties(dev);
-    loadConfig(true, WhatToSayTP.name);
 }
 
 bool MyCustomDriver::updateProperties()
@@ -106,113 +151,25 @@ bool MyCustomDriver::updateProperties()
     if (isConnected())
     {
         // Add the properties to the driver when we connect.
-        defineProperty(&SayHelloSP);
-        defineProperty(&WhatToSayTP);
-        defineProperty(&SayCountNP);
+        defineProperty(SayHelloSP);
+        defineProperty(WhatToSayTP);
+        defineProperty(SayCountNP);
     }
     else
     {
         // And remove them when we disconnect.
-        deleteProperty(SayHelloSP.name);
-        deleteProperty(WhatToSayTP.name);
-        deleteProperty(SayCountNP.name);
+        deleteProperty(SayHelloSP);
+        deleteProperty(WhatToSayTP);
+        deleteProperty(SayCountNP);
     }
 
     return true;
 }
 
-bool MyCustomDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
-                                 int n)
-{
-    // All of the ISNew* methods should return true if the property update was handled,
-    // otherwise false. The return value is NOT an indication of success, but rather
-    // that the property belonged to the device.
-    // So we can either write our methods to check base classes first, like this...
-
-    if (INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n))
-    {
-        // Looks like DefaultDevice handled this, so we don't need to worry with it.
-        return true;
-    }
-
-    // Make sure it is for us.
-    if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
-    {
-        if (strcmp(name, SayHelloSP.name) == 0)
-        {
-            // Accept what we received.
-            IUUpdateSwitch(&SayHelloSP, states, names, n);
-
-            // Find out what switch was clicked.
-            int index = IUFindOnSwitchIndex(&SayHelloSP);
-            switch (index)
-            {
-            case SAY_HELLO_DEFAULT:
-                LOG_INFO("Hello, world!");
-                break;
-            case SAY_HELLO_CUSTOM:
-                LOG_INFO(WhatToSayT[0].text);
-                break;
-            }
-
-            // Increment our "Say Count" counter.
-            // Here we update the value on the property.
-            SayCountN[0].value = int(SayCountN[0].value) + 1;
-            // And then send a message to the clients to let them know it is updated.
-            IDSetNumber(&SayCountNP, nullptr);
-
-            // Turn all switches back off.
-            IUResetSwitch(&SayHelloSP);
-
-            // Set the property state back to idle
-            SayHelloSP.s = IPS_IDLE;
-
-            // And actually inform INDI of those two operations
-            IDSetSwitch(&SayHelloSP, nullptr);
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool MyCustomDriver::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
-{
-    // Make sure it is for us.
-    if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
-    {
-        if (strcmp(name, WhatToSayTP.name) == 0)
-        {
-            WhatToSayTP.s = IPS_IDLE;
-            // This is a helper method to just update the values
-            // on the property.
-            IUUpdateText(&WhatToSayTP, texts, names, n);
-
-            // And tell the client they were updated.
-            IDSetText(&WhatToSayTP, nullptr);
-
-            // This is a really important value, so make sure we save it every time
-            // the user sets it. Don't wait for the user to click the save
-            // button in options...
-            // You probably don't want to do this for all your properties, but
-            // you might for some.
-            saveConfig(true, WhatToSayTP.name);
-
-            return true;
-        }
-    }
-
-    // ...or pass it down if we don't handle it.
-    // Nobody has claimed this, so let the parent handle it.
-    return INDI::DefaultDevice::ISNewText(dev, name, texts, names, n);
-}
-
 bool MyCustomDriver::saveConfigItems(FILE *fp)
 {
     INDI::DefaultDevice::saveConfigItems(fp);
-    IUSaveConfigText(fp, &WhatToSayTP);
-
+    WhatToSayTP.save(fp);
     return true;
 }
 
