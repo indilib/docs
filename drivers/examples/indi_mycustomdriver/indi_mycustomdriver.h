@@ -19,10 +19,6 @@ public:
     virtual bool updateProperties() override;
 
     virtual void ISGetProperties(const char *dev) override;
-    virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
-                             int n) override;
-    virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[],
-                           int n) override;
 
     virtual void TimerHit() override;
 
@@ -40,14 +36,9 @@ private:
         SAY_HELLO_CUSTOM,
         SAY_HELLO_N,
     };
-    ISwitch SayHelloS[SAY_HELLO_N]{};
-    ISwitchVectorProperty SayHelloSP;
-
-    IText WhatToSayT[1]{};
-    ITextVectorProperty WhatToSayTP;
-
-    INumber SayCountN[1]{};
-    INumberVectorProperty SayCountNP;
+    INDI::PropertySwitch SayHelloSP  {SAY_HELLO_N};
+    INDI::PropertyText   WhatToSayTP {1};
+    INDI::PropertyNumber SayCountNP  {1};
 
 private: // serial connection
     bool Handshake();
