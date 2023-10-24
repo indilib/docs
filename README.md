@@ -20,8 +20,9 @@ First, some helpful links:
   * [libcfitsio](https://heasarc.gsfc.nasa.gov/fitsio/)
 * **Bundled** Header-only Libraries
   The following C++ header-only libraries are included with libindi and may be used by any driver to handle common tasks around JSON and RESTful web services.
-  * [json](https://github.com/nlohmann/json): Write & parse JSON in INDI drivers.
-  * [httplib](https://github.com/yhirose/cpp-httplib): Create http(s) servers and clients. Make GET/POST/PUT calls for RESTful services.
+  * [json](https://github.com/nlohmann/json): Write & parse JSON in INDI drivers (e.g. [Primalucelab Devices](https://github.com/indilib/indi/blob/master/drivers/focuser/primalucacommandset.cpp))
+  * [httplib](https://github.com/yhirose/cpp-httplib): Create http(s) servers and clients. Make GET/POST/PUT calls for RESTful services (e.g. [Planewave Mount](https://github.com/indilib/indi/blob/master/drivers/telescope/planewave_mount.cpp)).
+  * [inifile-cpp](https://github.com/Rookfighter/inifile-cpp): a simple and easy to use single header-only ini file en- and decoder for C++ (e.g. [Planewave Mount](https://github.com/indilib/indi/blob/master/drivers/telescope/planewave_mount.cpp)).
 
 ## Introduction
 
