@@ -218,8 +218,9 @@ Some CCD drivers support streaming and recording of video streams. All the prope
 |                    |        | RECORD_DURATION_ON       | Start recording until the duration set in `RECORD_OPTIONS` has elapsed.               |
 |                    |        | RECORD_FRAME_ON          | Start recording until the number of frames set in `RECORD_OPTIONS` has been captured. |
 |                    |        | RECORD_OFF               | Stops recording.                                                                      |
-| Fast Exposure      | Switch | CCD_FAST_TOGGLE          | Fast Exposure is used to enable camera to immediately begin capturing the next frames.|
-| Exposure Counter   | Number | CCD_FAST_COUNT           | Number of fast exposure captured to take once capture begins.                         |
+| CCD_FAST_TOGGLE    | Switch | INDI_ENABLED             | Fast Exposure is used to enable camera to immediately begin capturing the next frames.|
+|                    |        | INDI_DISABLED            |                                                                                       |
+| CCD_FAST_COUNT     | Number | FRAMES                   | Number of fast exposure captured to take once capture begins.                         |
 
 #### Notes
 
