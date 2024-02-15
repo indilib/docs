@@ -218,6 +218,9 @@ Some CCD drivers support streaming and recording of video streams. All the prope
 |                    |        | RECORD_DURATION_ON       | Start recording until the duration set in `RECORD_OPTIONS` has elapsed.               |
 |                    |        | RECORD_FRAME_ON          | Start recording until the number of frames set in `RECORD_OPTIONS` has been captured. |
 |                    |        | RECORD_OFF               | Stops recording.                                                                      |
+| CCD_FAST_TOGGLE    | Switch | INDI_ENABLED             | Fast Exposure is used to enable camera to immediately begin capturing the next frames.|
+|                    |        | INDI_DISABLED            |                                                                                       |
+| CCD_FAST_COUNT     | Number | FRAMES                   | Number of fast exposure captured to take once capture begins.                         |
 
 #### Notes
 
@@ -231,6 +234,12 @@ Some CCD drivers support streaming and recording of video streams. All the prope
 * _H_ is replaced with the time ('hh-mm-ss')
 * _T_ is replaced with a timestamp
 * _F_ is replaced with the filter name currently in use
+
+`FAST EXPOSURE` Fast Exposure is used to enable camera to immediately begin capturing the next frame once the previous frame data is downloaded from the camera. With Fast Exposure disabled, the driver have to wait until the client initiates the next capture request. To minimize the downtime, Fast Exposure can be enabled to trigger for a specific number of frame in Fast Exposure Count property.
+
+Once the initial capture is started, the driver would continue to capture all necessary frames without waiting for client until the count reaches zero. The Fast Exposure Count is decremented after each fast exposure is complete.
+
+Upload Mode affects Fast Exposure behavior depending on the mode selected. For LOCAL mode, where images are saved locally to disk, Fast Exposure is most efficient. For CLIENT or BOTH modes, the driver have to transmit the data over network to the client. If the upload time exceeds the requested exposure time, then Fast Exposure cannot reliably work and the driver would abort the exposure.
 
 ### Filter Wheel Properties
 
