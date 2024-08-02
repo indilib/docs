@@ -1,6 +1,7 @@
 ---
 sort: 7
 ---
+
 ## Driver Interface
 
 There are several different device types recognized by the INDI ecosystem. Your driver can implement
@@ -26,6 +27,11 @@ enum DRIVER_INTERFACE
     SPECTROGRAPH_INTERFACE  = (1 << 13), /**< Spectrograph interface */
     CORRELATOR_INTERFACE    = (1 << 14), /**< Correlators (interferometers) interface */
     AUX_INTERFACE           = (1 << 15), /**< Auxiliary interface */
+    OUTPUT_INTERFACE        = (1 << 16), /**< Digital Output (e.g. Relay) interface */
+    INPUT_INTERFACE         = (1 << 17), /**< Digital/Analog Input (e.g. GPIO) interface */
+    POWER_INTERFACE         = (1 << 18), /**< Auxiliary interface */
+
+    SENSOR_INTERFACE        = SPECTROGRAPH_INTERFACE | DETECTOR_INTERFACE | CORRELATOR_INTERFACE
 };
 ```
 
@@ -33,53 +39,74 @@ You can let INDI know what you implement by calling `setDriverInterface` in `ini
 
 Many of these interfaces have base classes you can and should inherit from if you implmement the interface.
 
-* `TELESCOPE_INTERFACE`
-    * `liibindi/inditelescope.h`
-    * `Telescope`
+- `TELESCOPE_INTERFACE`
 
-* `CCD_INTERFACE`
-    * `liibindi/indiccd.h`
-    * `CCD`
+  - `liibindi/inditelescope.h`
+  - `Telescope`
 
-* `GUIDER_INTERFACE`
-    * `libindi/indiguiderinterface.h`
-    * `GuiderInterface`
+- `CCD_INTERFACE`
 
-* `FOCUSER_INTERFACE`
-    * `libindi/indifocuser.h`
-    * `Focuser`
+  - `liibindi/indiccd.h`
+  - `CCD`
 
-* `FILTER_INTERFACE`
-    * `libindi/indifilterwheel.h`
-    * `FilterWheel`
+- `GUIDER_INTERFACE`
 
-* `DOME_INTERFACE`
-    * `libindi/indidome.h`
-    * `Dome`
+  - `libindi/indiguiderinterface.h`
+  - `GuiderInterface`
 
-* `GPS_INTERFACE`
-    * `libindi/indigps.h`
-    * `GPS`
+- `FOCUSER_INTERFACE`
 
-* `WEATHER_INTERFACE`
-    * `libindi/indiweather.h`
-    * `Weather`
+  - `libindi/indifocuserinterface.h`
+  - `FocuserInterface`
 
-* `DETECTOR_INTERFACE`
-    * `libindi/indidetector.h`
-    * `Detector`
+- `FILTER_INTERFACE`
 
-* `ROTATOR_INTERFACE`
-    * `libindi/indirotator.h`
-    * `Rotator`
+  - `libindi/indifilterinterface.h`
+  - `FilterInterface`
 
-* `SPECTROGRAPH_INTERFACE`
-    * `libindi/indispectrograph.h`
-    * `Spectrograph`
+- `DOME_INTERFACE`
 
-* `CORRELATOR_INTERFACE`
-    * `libindi/indicorrelator.h`
-    * `Correlator`
+  - `libindi/indidome.h`
+  - `Dome`
+
+- `GPS_INTERFACE`
+
+  - `libindi/indigps.h`
+  - `GPS`
+
+- `WEATHER_INTERFACE`
+
+  - `libindi/indiweatherinterface.h`
+  - `WeatherInterface`
+
+- `DETECTOR_INTERFACE`
+
+  - `libindi/indidetector.h`
+  - `Detector`
+
+- `ROTATOR_INTERFACE`
+
+  - `libindi/indirotatorinterface.h`
+  - `RotatorInterface`
+
+- `OUTPUT_INTERFACE`
+
+  - `libindi/indioutputinterface.h`
+  - `OutputInterface`
+
+- `INPUT_INTERFACE`
+
+  - `libindi/indiinputinterface.h`
+  - `InputInterface`
+
+- `SPECTROGRAPH_INTERFACE`
+
+  - `libindi/indispectrograph.h`
+  - `Spectrograph`
+
+- `CORRELATOR_INTERFACE`
+  - `libindi/indicorrelator.h`
+  - `Correlator`
 
 Each of these base classes have methods you must override for your driver to work correctly.
 They also take care of creating any

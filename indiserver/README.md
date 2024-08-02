@@ -7,6 +7,8 @@ $ indiserver [options] driver [driver ...]
 Options:
  -l d     : log driver messages to <d>/YYYY-MM-DD.islog
  -m m     : kill client if gets more than this many MB behind, default 10
+ -d m     : drop streaming blobs if client gets more than this many MB behind, default 5. 0 to disable
+ -u path  : Path for the local connection socket (abstract), default /tmp/indiserver
  -p p     : alternate IP port, default 7624
  -f path  : Path to fifo for dynamic startup and shutdown of drivers.
  -r r     : maximum driver restarts on error, default 10.

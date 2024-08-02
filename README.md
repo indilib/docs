@@ -6,23 +6,25 @@ as information on the INDI protocol itself.
 
 First, some helpful links:
 
-* INDI Links
-  * [INDI Main Repo](https://github.com/indilib/indi)
-  * [INDI 3rd Party Repo](https://github.com/indilib/indi-3rdparty)
-  * [libindi API Docs](https://www.indilib.org/api/index.html)
-  * [INDI Stable Builds](https://launchpad.net/~mutlaqja/+archive/ubuntu/ppa)
-  * [INDI Nightly Builds](https://launchpad.net/~mutlaqja/+archive/ubuntu/indinightly)
-* Build Tools
-  * [CMake](https://cmake.org/cmake/help/latest/)
-* Helpful Libraries
-  * [libnova](http://libnova.sourceforge.net/)
-  * [libgsl](https://www.gnu.org/software/gsl/)
-  * [libcfitsio](https://heasarc.gsfc.nasa.gov/fitsio/)
-* **Bundled** Header-only Libraries
+- INDI Links
+  - [INDI Main Repo](https://github.com/indilib/indi)
+  - [INDI 3rd Party Repo](https://github.com/indilib/indi-3rdparty)
+  - [libindi API Docs](https://www.indilib.org/api/index.html)
+  - [INDI Stable Builds](https://launchpad.net/~mutlaqja/+archive/ubuntu/ppa)
+  - [INDI Nightly Builds](https://launchpad.net/~mutlaqja/+archive/ubuntu/indinightly)
+- Build Tools
+  - [CMake](https://cmake.org/cmake/help/latest/)
+- Helpful Libraries
+  - [libnova](http://libnova.sourceforge.net/)
+  - [libgsl](https://www.gnu.org/software/gsl/)
+  - [libcfitsio](https://heasarc.gsfc.nasa.gov/fitsio/)
+  - [libxisf](https://gitea.nouspiro.space/nou/libXISF)
+- **Bundled** Header-only Libraries
   The following C++ header-only libraries are included with libindi and may be used by any driver to handle common tasks around JSON and RESTful web services.
-  * [json](https://github.com/nlohmann/json): Write & parse JSON in INDI drivers (e.g. [Primalucelab Devices](https://github.com/indilib/indi/blob/master/drivers/focuser/primalucacommandset.cpp))
-  * [httplib](https://github.com/yhirose/cpp-httplib): Create http(s) servers and clients. Make GET/POST/PUT calls for RESTful services (e.g. [Planewave Mount](https://github.com/indilib/indi/blob/master/drivers/telescope/planewave_mount.cpp)).
-  * [inifile-cpp](https://github.com/Rookfighter/inifile-cpp): a simple and easy to use single header-only ini file en- and decoder for C++ (e.g. [Planewave Mount](https://github.com/indilib/indi/blob/master/drivers/telescope/planewave_mount.cpp)).
+  - [json](https://github.com/nlohmann/json): Write & parse JSON in INDI drivers (e.g. [Primalucelab Devices](https://github.com/indilib/indi/blob/master/drivers/focuser/primalucacommandset.cpp))
+  - [httplib](https://github.com/yhirose/cpp-httplib): Create http(s) servers and clients. Make GET/POST/PUT calls for RESTful services (e.g. [Planewave Mount](https://github.com/indilib/indi/blob/master/drivers/telescope/planewave_mount.cpp)).
+  - [inifile-cpp](https://github.com/Rookfighter/inifile-cpp): a simple and easy to use single header-only ini file encoder and decoder for C++ (e.g. [Planewave Mount](https://github.com/indilib/indi/blob/master/drivers/telescope/planewave_mount.cpp)).
+  - [nanomodbus](https://github.com/debevv/nanoMODBUS): A compact MODBUS RTU/TCP C library for embedded controllers (e.g. [Waveshare Relay](https://github.com/indilib/indi/blob/master/drivers/auxiliary/waveshare_modbus_relay.h)).
 
 ## Introduction
 
@@ -77,12 +79,12 @@ library and device drivers to different platforms as desired.
 
 Supported operating systems include:
 
-* Linux: Full Support
-* MacOS: Full Support, except for few Linux-only drivers.
-* Windows: Partial driver support via Cygwin. Client support.
-* BSD: Full Support, except for few Linux-only drivers.
-* iOS: Client support only.
-* Android: Client support only.
+- Linux: Full Support
+- MacOS: Full Support, except for few Linux-only drivers.
+- Windows: Partial driver support via Cygwin. Client support.
+- BSD: Full Support, except for few Linux-only drivers.
+- iOS: Client support only.
+- Android: Client support only.
 
 INDI Library provides
 [Python client bindings](https://github.com/indilib/pyindi-client) to access INDI server and drivers.
@@ -91,19 +93,20 @@ INDI Library provides
 
 ### Linux/Mac
 
-* [INDI Downloads](https://indilib.org/get-indi.html)
+- [INDI Downloads](https://indilib.org/get-indi.html)
+- [Nou Scripts](https://gitea.nouspiro.space/nou/astro-soft-build)
 
 ### Raspberry Pi
 
-* [Astroberry Repo](https://www.astroberry.io/repo/)
-* [AstroPI3 Script](https://github.com/rlancaste/AstroPi3)
+- [Astroberry Repo](https://www.astroberry.io/repo/)
+- [AstroPI3 Script](https://github.com/rlancaste/AstroPi3)
 
 ### Source
 
 Instructions for building from source are available in the GitHub repos.
 
-* [INDI GitHub](https://github.com/indilib/indi)
-* [INDI 3rd Party GitHub](https://github.com/indilib/indi-3rdparty)
+- [INDI GitHub](https://github.com/indilib/indi)
+- [INDI 3rd Party GitHub](https://github.com/indilib/indi-3rdparty)
 
 ## Contributing
 
