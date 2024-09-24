@@ -126,12 +126,15 @@ Telescope standard properties define critical properties for the operation and c
 |                          |        | PARK_CURRENT           | Use current coordinates/encoders as home park position.                                        |
 |                          |        | PARK_DEFAULT           | Use driver's default park position.                                                            |
 |                          |        | PARK_WRITE_DATA        | Write TELESCOPE_PARK_POSITION and current parking status to file ($HOME/.indi/ParkData.xml)    |
+|                          |        | PARK_PURGE_DATA        | Delete parking entry for this mount from ~/.indi/ParkData.xml file                             |
 | TELESCOPE_ABORT_MOTION   | Switch | ABORT_MOTION           | Stop telescope rapidly, but gracefully                                                         |
 | TELESCOPE_TRACK_RATE     | Switch |                        |                                                                                                |
 |                          |        | TRACK_SIDEREAL         | Track at sidereal rate.                                                                        |
 |                          |        | TRACK_SOLAR            | Track at solar rate.                                                                           |
 |                          |        | TRACK_LUNAR            | Track at lunar rate.                                                                           |
 |                          |        | TRACK_CUSTOM           | Custom track rate. This element is optional                                                    |
+|                          |        | TRACK_RATE_RA          |                                                                                                |
+|                          |        | TRACK_RATE_DE          |                                                                                                |
 | TELESCOPE_INFO           | Number |                        |                                                                                                |
 |                          |        | TELESCOPE_APERTURE     | Telescope aperture, mm                                                                         |
 |                          |        | TELESCOPE_FOCAL_LENGTH | Telescope focal length, mm                                                                     |
@@ -140,6 +143,38 @@ Telescope standard properties define critical properties for the operation and c
 | TELESCOPE_PIER_SIDE      | Switch |                        | GEM Pier Side                                                                                  |
 |                          |        | PIER_EAST              | Mount on the East side of pier (Pointing West).                                                |
 |                          |        | PIER_WEST              | Mount on the West side of pier (Pointing East).                                                |
+| DOME_POLICY              | Switch |                        |                                                                                                |
+|                          |        | DOME_IGNORED           | Ignore dome status when parking and unparking                                                  |
+|                          |        | DOME_LOCKS             | Prevents mounts from unparking while the dome is parked.                                       |
+| PEC                      | Switch |                        |                                                                                                |
+|                          |        | PEC OFF                |                                                                                                |
+|                          |        | PEC ON                 |                                                                                                |
+| TELESCOPE_TRACK_MODE     | Switch |                        | Common pre-selected tracking rates for RA axis                                                 |
+|                          |        | TRACK_SIDEREAL         | Sidereal Rate                                                                                  |
+|                          |        | TRACK_SOLAR            | Solar Rate                                                                                     |
+|                          |        | TRACK_LUNAR            | Lunar Rate                                                                                     |
+|                          |        | TRACK_CUSTOM           | Custom tracking rate in arcseconds per second.                                                 |
+| TELESCOPE_TRACK_STATE    | Swtich |                        |                                                                                                |
+|                          |        | TRACK_ON               | Toggle mount tracking on                                                                       |
+|                          |        | TRACK_OFF              | Toggle mount tracking off                                                                      |
+| SAT_TLE_TEXT             | Text   | TLE                    | Satellite TLE                                                                                  |
+| SAT_PASS_WINDOW          | Text   |                        |                                                                                                |
+|                          |        | SAT_PASS_WINDOW_END    |                                                                                                |
+|                          |        | SAT_PASS_WINDOW_START  |                                                                                                |
+| SAT_TRACKING_STAT        | Switch |                        |                                                                                                |
+|                          |        | SAT_TRACK              |                                                                                                |
+|                          |        | SAT_HALT               |                                                                                                |
+| TELESCOPE_REVERSE_MOTION | Swtich |                        | Toggle motion reversal for each axis                                                           |
+|                          |        | REVERSE_NS             | Toggle North/South or Declination Axis Reversal                                                |
+|                          |        | REVERSE_WE             | Toggle West/East or Right Ascension Axis Reversal                                              |
+| MOTION_CONTROL_MODE      | Swtich |                        |                                                                                                |
+|                          |        | MOTION_CONTROL_MODE    |                                                                                                |
+|                          |        | _JOYSTICK              |                                                                                                |
+|                          |        | MOTION_CONTROL_MODE    |                                                                                                |
+|                          |        | _AXES                  |                                                                                                |
+| JOYSTICK_LOCK_AXIS       | Switch |                        | Select which joystick axes are locked. A locked axis                                           |
+|                          |        | LOCK_AXIS_1            |                                                                                                |
+|                          |        | LOCK_AXIS_2            |                                                                                                |
 
 #### Notes
 
@@ -192,6 +227,27 @@ For clients that want to implement the GOTO functionality of a telescope, they s
 |                    |        | CFA_TYPE              | CFA Filter type (e.g. RGGB).                                                                             |
 | CCD1               | BLOB   |                       | CCD1 for primary CCD, CCD2 for guider CCD.                                                               |
 |                    |        | CCD1                  | Binary fits data encoded in base64. The CCD1.format is used to indicate the data type (e.g. ".fits")     |
+| CCD_TEMP_RAMP      | Number |                       | Set TEC cooler ramp parameters. The ramp is software controlled inside INDI.                             |
+|                    |        | RAMP_SLOPE            | Maximum temperature change in degrees Celsius per minute                                                 |
+|                    |        | RAMP_THRESHOLD        | Threshold in degrees celsius. If the absolute difference of target and current temperature equals to or  |
+|                    |        |                       | below this threshold, then the cooling operation is complete.                                            |
+| WCS_CONTROL        | Switch |                       | Toggle World Coordinate System keyword inclusion in FITS Header.                                         |
+|                    |        | WCS_ENABLE            |                                                                                                          |
+|                    |        | WCS_DISABLE           |                                                                                                          |
+| CCD_ROTATION       | Number |                       | Camera field of view rotation measured as East of North in degrees.                                      |
+|                    |        | CCD_ROTATION_VALUE    |                                                                                                          |
+| CCD_CAPTURE_FORMAT | Switch |                       | Raw capture format as supported by the driver or hardware (e.g. Bayer 16bit or RGB)                      |
+| CCD_TRANSFER_FORMAT| Switch |                       | Transfer format of the raw captured format before sending the image back to the client or saving to disk.|
+|                    |        | FORMAT_FITS           | Encode captured image as FITS                                                                            |
+|                    |        | FORMAT_NATIVE         | Send image as-is                                                                                         |
+|                    |        | FORMAT_XISF           | Encode captured images as XISF                                                                           |
+| CCD_FILE_PATH      | Text   | FILE_PATH             | Absolute path where images is saved on disk                                                              |
+| FITS_HEADER        | Text   |                       | Name, value, and comment row to be appended to the fits header on the next capture. The row needs to be  |
+|                    |        |                       | set once for any subsequent captures. It is not retained on driver restart.                              |
+|                    |        | KEYWORD_NAME          |                                                                                                          |
+|                    |        | KEYWORD_VALUE         |                                                                                                          |
+|                    |        | KEYWORD_COMMENT       |                                                                                                          |
+
 
 Most `CCD_*` properties are also applicable to `GUIDER` chip, so replace `CCD` with `GUIDER` above to define properties for the `GUIDER` chip, if applicable.
 
