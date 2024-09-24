@@ -227,6 +227,27 @@ For clients that want to implement the GOTO functionality of a telescope, they s
 |                    |        | CFA_TYPE              | CFA Filter type (e.g. RGGB).                                                                             |
 | CCD1               | BLOB   |                       | CCD1 for primary CCD, CCD2 for guider CCD.                                                               |
 |                    |        | CCD1                  | Binary fits data encoded in base64. The CCD1.format is used to indicate the data type (e.g. ".fits")     |
+| CCD_TEMP_RAMP      | Number |                       | Set TEC cooler ramp parameters. The ramp is software controlled inside INDI.                             |
+|                    |        | RAMP_SLOPE            | Maximum temperature change in degrees Celsius per minute                                                 |
+|                    |        | RAMP_THRESHOLD        | Threshold in degrees celsius. If the absolute difference of target and current temperature equals to or  |
+|                    |        |                       | below this threshold, then the cooling operation is complete.                                            |
+| WCS_CONTROL        | Switch |                       | Toggle World Coordinate System keyword inclusion in FITS Header.                                         |
+|                    |        | WCS_ENABLE            |                                                                                                          |
+|                    |        | WCS_DISABLE           |                                                                                                          |
+| CCD_ROTATION       | Number |                       | Camera field of view rotation measured as East of North in degrees.                                      |
+|                    |        | CCD_ROTATION_VALUE    |                                                                                                          |
+| CCD_CAPTURE_FORMAT | Switch |                       | Raw capture format as supported by the driver or hardware (e.g. Bayer 16bit or RGB)                      |
+| CCD_TRANSFER_FORMAT| Switch |                       | Transfer format of the raw captured format before sending the image back to the client or saving to disk.|
+|                    |        | FORMAT_FITS           | Encode captured image as FITS                                                                            |
+|                    |        | FORMAT_NATIVE         | Send image as-is                                                                                         |
+|                    |        | FORMAT_XISF           | Encode captured images as XISF                                                                           |
+| CCD_FILE_PATH      | Text   | FILE_PATH             | Absolute path where images is saved on disk                                                              |
+| FITS_HEADER        | Text   |                       | Name, value, and comment row to be appended to the fits header on the next capture. The row needs to be  |
+|                    |        |                       | set once for any subsequent captures. It is not retained on driver restart.                              |
+|                    |        | KEYWORD_NAME          |                                                                                                          |
+|                    |        | KEYWORD_VALUE         |                                                                                                          |
+|                    |        | KEYWORD_COMMENT       |                                                                                                          |
+
 
 Most `CCD_*` properties are also applicable to `GUIDER` chip, so replace `CCD` with `GUIDER` above to define properties for the `GUIDER` chip, if applicable.
 
