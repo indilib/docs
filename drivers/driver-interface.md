@@ -123,6 +123,22 @@ to do the actual heavy lifting.
     virtual IPState GuideWest(uint32_t ms) override;
 ```
 
+The driver incorporates the interfaces by means of C++ class inheritance. You can inherit from multiple INDI interfaces.
+
+```cpp
+class MyCustomDriver : public INDI::GuiderInterface
+{
+}
+```
+
+Many interfaces have a short alias to facilitate its usage. For example, the INDI::GuiderInterface alias is **GI**.
+
+```cpp
+MyCustomDriver::MyCustomDriver : GI(this)
+{
+}
+```
+
 You'll also need to initialize the guider properties in `initProperties`:
 
 ```cpp
@@ -131,8 +147,10 @@ bool MyCustomDriver::initProperties()
     // initialize the parent's properties first
     INDI::DefaultDevice::initProperties();
 
-    initGuiderProperties(getDeviceName(), MOTION_TAB);
+    // Send which tab you want to define the guider properties in
+    GI::initProperties(MOTION_TAB);
 
+    // Important to update driver interface to indicate that it supports GUIDER interface
     setDriverInterface(AUX_INTERFACE | GUIDER_INTERFACE);
 
     return true;
@@ -145,16 +163,15 @@ Define them in `updateProperties`:
 bool MyCustomDriver::updateProperties()
 {
     INDI::DefaultDevice::updateProperties();
+    GI::updateProperties();
 
     if (isConnected())
     {
-        defineProperty(&GuideNSNP);
-        defineProperty(&GuideWENP);
+        // Define MyCustomDriver properties.
     }
     else
     {
-        deleteProperty(GuideNSNP.name);
-        deleteProperty(GuideWENP.name);
+        // Delete MyCustomDriver properties.
     }
 
     return true;
@@ -166,27 +183,18 @@ And process new values from the client in `ISNewNumber`:
 ```cpp
 bool MyCustomDriver::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
 {
-    if (!strcmp(name, GuideNSNP.name) || !strcmp(name, GuideWENP.name))
-    {
-        processGuiderProperties(name, values, names, n);
-        return true;
-    }
+    // Check if GuiderInterface accepts the properties. If it can, then no need to proceed further
+    if (GI::ISNewNumber(dev, name, values, names, n))
+      return true;
 
     return INDI::DefaultDevice::ISNewNumber(dev, name, values, names, n);
 }
 ```
 
-The `GuiderInterface` base class will take care of processing the number properties
-received from the client and turning them into calls to one of the four virtual
-methods above.
+The `GuiderInterface` base class will take care of processing the number properties received from the client and turning them into calls to one of the four virtual methods above.
 
-Note that some base classes will handle much of this for you. For example, the
-`Telescope` base class has it's own `updateProperties` that you can call from yours.
+Note that some base classes will handle much of this for you. For example, the `Telescope` base class has its own `updateProperties` that you can call from yours.
 
 `Telescope` also handles `TimerHit` for you, and instead you would override `ReadScopeStatus`.
 
-Be sure to get a good feel for the base class you are going to implememnt before trying
-to code it. Start with looking at the functions we have already talked about in this
-tutorial that are implemented on the base class. Also look for any pure virtual methods
-on the base class (they will be marked as `virtual` and have ` = 0;` at the end of the
-declaration). These are the methods you will HAVE to override.
+Be sure to get a good feel for the base class you are going to implememnt before trying to code it. Start with looking at the functions we have already talked about in this tutorial that are implemented on the base class. Also look for any pure virtual methods on the base class (they will be marked as `virtual` and have ` = 0;` at the end of the declaration). These are the methods you will HAVE to override.
