@@ -201,7 +201,31 @@ Finally, we should be expecting the driver to comply and update the `CCD_TEMPERA
 
 ## New and Updated properties
 
-Client can receive notifications for any newly defined property or an updated value to an existing property. Once a device is first defined newDevice, it is not possible to know which device subtypes are supported by the driver up until DRIVER_INFO is first defined. The DRIVER_INFO.DRIVER_INTERFACE text property is a number that defines the interface(s) supported by the driver. This is an ORed list of interface (e.g. TELESCOPE_INTERFACE | CAMERA_INTERFACE | FOCUSER_INTERFACE)..etc.
+Client can receive notifications for any newly defined property or an updated value to an existing property. Once a device is first defined newDevice, it is not possible to know which device subtypes are supported by the driver up until DRIVER_INFO is first defined. The DRIVER_INFO.DRIVER_INTERFACE text property is a number that defines the interface(s) supported by the driver. This is an ORed list of interface (e.g. TELESCOPE_INTERFACE \| CAMERA_INTERFACE \| FOCUSER_INTERFACE)..etc.
+
+You can overide the following functions in your client class to receive notification on devices, properties, and messages updates.
+
+```cpp
+class MyClient : public INDI::BaseClient
+{
+   .....
+  protected:
+        virtual void newDevice(INDI::BaseDevice dp) override;
+        virtual void removeDevice(INDI::BaseDevice dp) override;
+
+        virtual void newProperty(INDI::Property prop) override;
+        virtual void updateProperty(INDI::Property prop) override;
+        virtual void removeProperty(INDI::Property prop) override;
+
+        virtual void newMessage(INDI::BaseDevice dp, int messageID) override;
+        virtual void newUniversalMessage(std::string message) override;
+
+        virtual void serverConnected() override;
+        virtual void serverDisconnected(int exitCode) override;
+}
+```
+
+When the client detects a new device, *newDevice* is called and you can process the device.
 
 ```cpp
 void MyClient::newProperty(INDI::Property property)
