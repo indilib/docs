@@ -1,6 +1,9 @@
 ---
-sort: 8
+title: Inter-Driver Communication
+nav_order: 1
+parent: Advanced
 ---
+
 ## Inter-Driver Communication
 
 INDI Library provides the facility to snoop on properties in other drivers. This permits robust inter-driver communication that can be useful in many applications. Typically, all the properties defined by a driver are available for snooping by other drivers. Therefore, all drivers are by default publishers, whereas the snooping drivers are subscribers.
@@ -12,6 +15,7 @@ When a subscriber driver needs to subscribe to a property, it calls an API funct
 ```cpp
 IDSnoopDevice (snooped_device, snooped_property)
 ```
+
 Whenever the snooped_device updates its snooped_property, the INDI framework notifies the subscriber of the change by calling the ISSnoopDevice() function which is defined by the subscriber driver.
 
 In ISSnoopDevice, the driver receives an XML element for the new property value which it can pass to a number of handy utility routines for processing and information extraction.
@@ -19,6 +23,7 @@ In ISSnoopDevice, the driver receives an XML element for the new property value 
 For instance, suppose a driver defines a simple switch MountType to switch between mount types:
 
 Header file:
+
 ```cpp
 INDI::PropertySwitch MountTypeSP {2};
 enum
@@ -27,7 +32,7 @@ enum
   MOUNT_SINGLE_ARM
 };
 ```
-   
+
 Implementation file under initProperties():
 
 ```cpp
@@ -36,7 +41,7 @@ MountTypeSP[MOUNT_SINGLE_ARM].fill("MOUNT_SINGLE_ARM", "Single ARM", ISS_OFF);
 MountTypeSP.fill(getDeviceName(), "MOUNT_TYPE", "Mount Type", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 60, IPS_IDLE);
 ```
 
-The subscribed driver can start *snooping* on the property by issuing the following command, usually in its initProperties() function:
+The subscribed driver can start _snooping_ on the property by issuing the following command, usually in its initProperties() function:
 
 ```
 IDSnoopDevice("AstroTrac", "MOUNT_TYPE")
@@ -44,7 +49,7 @@ IDSnoopDevice("AstroTrac", "MOUNT_TYPE")
 
 This will cause the server to start monitoring this particular property as it gets updated, and would relay all subsequent updates to the subscribed driver.
 
-When the snooped property arrives at the subscribed driver, it arrives as an XML INDI Protocol message, for example: 
+When the snooped property arrives at the subscribed driver, it arrives as an XML INDI Protocol message, for example:
 
 ```xml
 <setSwitchVector device="AstroTrac" name="MOUNT_TYPE" state="Ok" timeout="60" timestamp="2021-07-12T07:04:31">
@@ -56,16 +61,16 @@ On
     </oneSwitch>
 </setSwitchVector>
 ```
-    
+
 There are two methods to parse the snooped property in the subscriber driver:
 
-## Process XML Message 
+## Process XML Message
 
 The subscriber driver processes the root XML elements for properties it is interested in fetching. In ISSnoopDevice, we can have the following:
 
 ```
 void ISSnoopDevice (XMLEle *root)
-{      
+{
    const char *propName = findXMLAttValu(root, "name");
    if (!strcmp(propName, "MOUNT_TYPE"))
    {
@@ -87,7 +92,8 @@ void ISSnoopDevice (XMLEle *root)
 ```
 
 ## Carbon Copy
-Alternatively, the subscriber driver may define a *carbon* copy of the snooped property so that it can use the utility functions to fetch the XML element into it. The subscriber driver simply needs to copy that definition to its source file
+
+Alternatively, the subscriber driver may define a _carbon_ copy of the snooped property so that it can use the utility functions to fetch the XML element into it. The subscriber driver simply needs to copy that definition to its source file
 In ISSnoopDevice, we can have the following:
 
 ```

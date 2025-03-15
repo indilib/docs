@@ -1,5 +1,7 @@
 ---
-sort: 2
+title: Creating Custom INDI Drivers
+nav_order: 2
+parent: Basics
 ---
 
 # Creating Custom INDI Drivers

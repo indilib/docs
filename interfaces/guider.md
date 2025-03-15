@@ -1,6 +1,9 @@
 ---
-sort: 9
+title: Guider Interface
+nav_order: 4
+parent: Device Interfaces
 ---
+
 ## Guider
 
 The best and simplest example of a working `GuiderInterface` is the `ArduinoST4` driver.

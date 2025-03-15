@@ -1,6 +1,9 @@
 ---
-sort: 4
+title: Serial Connections
+nav_order: 4
+parent: Basics
 ---
+
 ## Serial Connections
 
 Most of the hard work for dealing with serial connections is handled for you.

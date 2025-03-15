@@ -1,5 +1,7 @@
 ---
-sort: 9
+title: INDI Server Guide
+nav_order: 1
+parent: INDI Server
 ---
 
 # INDI Server Guide

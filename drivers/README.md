@@ -1,3 +1,10 @@
+---
+title: Driver Development
+nav_order: 3
+has_children: true
+permalink: /drivers/
+---
+
 # INDI Driver Development
 
 This guide is written with the assumption that you are using the `libindi` C++

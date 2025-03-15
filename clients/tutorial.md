@@ -1,5 +1,7 @@
 ---
-sort: 1
+title: Client Development Tutorial
+nav_order: 1
+parent: Client Development
 ---
 
 # Client Development Tutorial

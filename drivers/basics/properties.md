@@ -1,6 +1,9 @@
 ---
-sort: 3
+title: Device Properties
+nav_order: 3
+parent: Basics
 ---
+
 ## Device Properties (Theory)
 
 All communication in INDI is done by updating properties, so this is a really
@@ -79,16 +82,16 @@ A Number property is used to represent any numerical value in INDI.
 
 Number values have the following attributes in addition to `name` and `label`:
 
-* `format`
-    * This can be any `printf` compatible specifier for a `double`, or for sexagesimal formatting, you can use the INDI special `%m` formatter.
-* `min`
-    * The minimum value allowed.
-* `max`
-    * The maximum value allowed.
-* `step`
-    * A hint for the UI to do steps of values.
-* `value`
-    * The actual value stored. This will always be a double.
+- `format`
+  - This can be any `printf` compatible specifier for a `double`, or for sexagesimal formatting, you can use the INDI special `%m` formatter.
+- `min`
+  - The minimum value allowed.
+- `max`
+  - The maximum value allowed.
+- `step`
+  - A hint for the UI to do steps of values.
+- `value`
+  - The actual value stored. This will always be a double.
 
 #### Text
 
@@ -96,8 +99,8 @@ A Text property is used to represent any text value in INDI.
 
 Text values have the following attributes in addition to `name` and `label`:
 
-* `text`
-    * The actual value stored.
+- `text`
+  - The actual value stored.
 
 #### Switch
 
@@ -105,8 +108,8 @@ A Switch property is used to represent buttons, checkboxes, and dropdown lists i
 
 Switch values have the following attributes in addition to `name` and `label`:
 
-* `state`
-    * The `ISState` value of the switch. (On or Off)
+- `state`
+  - The `ISState` value of the switch. (On or Off)
 
 Switch properties have an additional attribute that the other properties don't have: `rule`. This is one of the `ISRule` values:
 
@@ -125,8 +128,8 @@ A Light property is a readonly light that shows in the INDI Control Panel. This 
 
 Light values have the following additional attributes in addition to `name` and `label`:
 
-* `state`
-    * An `IPState` value (Idle, Ok, Busy, Alert)
+- `state`
+  - An `IPState` value (Idle, Ok, Busy, Alert)
 
 #### BLOB
 
@@ -161,12 +164,13 @@ private:
     };
 ```
 
-Note the postfix **SP** we added to the property. This is part of the *property naming convention* adoped in INDI drivers. The postfix are fairly straightforward:
-+ Switch: SP
-+ Number: NP
-+ Text: TP
-+ Blob: BP
-+ Light: LP
+Note the postfix **SP** we added to the property. This is part of the _property naming convention_ adoped in INDI drivers. The postfix are fairly straightforward:
+
+- Switch: SP
+- Number: NP
+- Text: TP
+- Blob: BP
+- Light: LP
 
 When defining more than a single element, it is usually a good idea to define an enum to describe such elements. Do not rely on magic numbers! Above, we do not really need an enum since it is only a single-element property, but it was added for demonstration purposes.
 
@@ -185,7 +189,7 @@ bool MyCustomDriver::initProperties()
         "Say Hello",    // The label of the VALUE
         ISS_OFF         // The switch state
     );
-    
+
     SayHelloSP.fill(
         getDeviceName(),  // The name of the device
         "SAY_HELLO",      // The name of the PROPERTY
@@ -214,6 +218,7 @@ Now if we build and install the driver again, when we load it up in Ekos and loo
 But it doesn't do anything at the moment. Let's fix that.
 
 When a user clicks on a switch, a command get's sent through INDI that will update the data and trigger the function provided in the `onUpdate` method.
+
 ```cpp
 bool MyCustomDriver::initProperties()
 {
@@ -261,6 +266,7 @@ bool MyCustomDriver::initProperties()
 ```
 
 // Any where in the code you can log to the client the content of the property
+
 ```cpp
 LOG_INFO(WhatToSayTP[0].getText());
 ```
@@ -300,7 +306,7 @@ Let's have both a `Say Hello` and `Say Custom` button.
         SAY_HELLO_CUSTOM,
         SAY_HELLO_N,
     };
-    INDI::PropertySwitch SayHelloSP {SAY_HELLO_N};    
+    INDI::PropertySwitch SayHelloSP {SAY_HELLO_N};
 ```
 
 So, now `SayHelloSP` is an array with 2 values, instead of the 1 value we had before.
@@ -318,7 +324,7 @@ But we need to update `initProperties` to define the new switch value.
         "Say Custom",           // The label of the VALUE
         ISS_OFF                 // The switch state
     );
-    
+
     SayHelloSP.fill(
         getDeviceName(),  // The name of the device
         "SAY_HELLO",      // The name of the PROPERTY
@@ -328,7 +334,7 @@ But we need to update `initProperties` to define the new switch value.
         ISR_ATMOST1,      // At most 1 can be on
         60,               // With a timeout of 60 seconds
         IPS_IDLE          // and an initial state of idle.
-    );        
+    );
 ```
 
 If you'll notice, we are using the enum values here so we don't have to remember indexes.
@@ -397,7 +403,7 @@ and load it there.
 void MyCustomDriver::ISGetProperties(const char *dev)
 {
     DefaultDevice::ISGetProperties(dev);
-    
+
     // This would simulate a client sending a new value using the value stored in the config file.
     loadConfig(WhatToSayTP);
 }
@@ -407,7 +413,7 @@ However, if you need to load a value from the config file on startup, the **reco
 
 ```cpp
 bool MyCustomDriver::initProperties()
-{    
+{
     ...
     // We start by assigning the default value to a string
     char configSay[256]={"Hello, world!"};

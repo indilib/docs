@@ -1,6 +1,9 @@
 ---
-sort: 11
+title: Binary Transfers
+nav_order: 5
+parent: Basics
 ---
+
 # Binary Transfers
 
 Thus far, the main focus was on control and monitoring oriented properties. These are the properties that represent the physical buttons, knobs, lights, status indicators, and switches in devices. But these properties only support the acquisition of data in specific formats (number or text).
@@ -17,12 +20,12 @@ INDI server also expects data arriving from clients to be base64-encoded. The dr
 
 [tutorial_three](https://github.com/indilib/indi/tree/master/examples/tutorial_three) contains a demonstration on binary transfer. Data transfer in INDI is accomplished by using BLOB properties. A BLOB property has the following elements:
 
-* `name`: The property unique name
-* `label`: The property label, to be displayed in a GUI if desired
-* `format`: The type of the data being transfered. The format tell clients how to interpret the data.
-* `blob`: a pointer to the data.
-* `bloblen`: n compressed bytes if compression is used. Otherwise, the number of bytes uncompressed.
-* `size`: n bytes uncompressed.
+- `name`: The property unique name
+- `label`: The property label, to be displayed in a GUI if desired
+- `format`: The type of the data being transfered. The format tell clients how to interpret the data.
+- `blob`: a pointer to the data.
+- `bloblen`: n compressed bytes if compression is used. Otherwise, the number of bytes uncompressed.
+- `size`: n bytes uncompressed.
 
 In astronomical applications, the most common data format is FITS. Therefore, the format string for FITS BLOB property should be ".fits" (or ".fits.z" if compression is used). The ".fits" format is a standard format supported by several INDI clients. Other data formats used in INDI drivers include ".stream" format to transmit live video, and ".ccdpreview" to transmit previews of CCD frames.
 
@@ -58,12 +61,14 @@ There are further optimisations possible to avoid more memory copies, on the dri
 
 The fast-blob protocol is mostly the same than default one, with the following deviations:
 
-+ The client must connect to unix domain socket (only supported under Linux, MacOS lacks some important feature there...).
-+ the client has to reply to "pingRequest" messages by "pingReply" (this implements the back-pressure, see below why it's important). The uid attribute from the request must be repeated in the reply:
+- The client must connect to unix domain socket (only supported under Linux, MacOS lacks some important feature there...).
+- the client has to reply to "pingRequest" messages by "pingReply" (this implements the back-pressure, see below why it's important). The uid attribute from the request must be repeated in the reply:
+
 ```
 <pingRequest uid='2'/>
 <pingReply uid='2'/>
 ```
+
 on UNIX domain connection, the server can pass the blob content as an [anciliary file descriptor](http://man7.org/linux/man-pages/man7/unix.7.html). The file descriptor can later be mmapped. In that case, the xml message will have the attached property set to true (and no enclen by the way):
 
 ```
@@ -71,14 +76,16 @@ on UNIX domain connection, the server can pass the blob content as an [anciliary
     <oneBLOB name='content' size='32' format='.fits' attached='true'/>
 </setBLOBVector>
 ```
+
 1. It is guaranteed that the file descriptor(s) for attached blob(s) are received by the end of the xml message. The exact position probably depends on the OS.
 2. The server may also decide to not used shared buffer so the client must still support the use existing base64 layout (for example for small blobs)
 3. The transport of buffers as filedescriptor can be very very fast, so your client may receive GB of data without much processing. Without backpressure, memory in the client side may grow uncontrolled (ultimately leading to Out of memory error, possibly system wide invoking the OOM killer). For this reason, it is strongly advised that when a blob arrive, the client stops processing incoming messages (especially replying to pingRequests) until it has finished processing the blob.
 4. To actually free the memory used by a filedescriptor, the client must close the fd, and munmap the memory area.
 
 Some example of low level functions for these tasks can be found in the indi source file integs/test.cpp (integration tests), which is somewhat decoupled from indi so probably easier to read for a start:
-+ integs/test.cpp: the unixSocketConnect function - to connect to a local socket by path name
-+ integs/ConnectionMock.cpp, method ConnectionMock::read, shows how to read the input channel, collecting received fds at the same time
-+ integs/SharedBuffer.cpp, shows how to access memory from a fd. It is in the write direction, while you client will want to read insted. So your client should use PROT_READ only and remove PROT_WRITE)
+
+- integs/test.cpp: the unixSocketConnect function - to connect to a local socket by path name
+- integs/ConnectionMock.cpp, method ConnectionMock::read, shows how to read the input channel, collecting received fds at the same time
+- integs/SharedBuffer.cpp, shows how to access memory from a fd. It is in the write direction, while you client will want to read insted. So your client should use PROT_READ only and remove PROT_WRITE)
 
 Tests codes in the integs directory may also be useful as they show the plain text version of the messages for various cases.

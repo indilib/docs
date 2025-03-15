@@ -1,3 +1,10 @@
+---
+title: Home
+nav_order: 1
+has_children: true
+permalink: /
+---
+
 # INDI Technical Documentation
 
 Welcome to the home of [INDI](https://indilib.org) technical documentation.

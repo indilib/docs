@@ -1,3 +1,10 @@
+---
+title: Guides
+nav_order: 2
+has_children: true
+permalink: /guides/
+---
+
 # INDI Documentation Guides
 
 This directory contains general documentation and guides for the INDI library and protocol.

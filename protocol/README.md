@@ -1,3 +1,10 @@
+---
+title: Protocol
+nav_order: 6
+has_children: true
+permalink: /protocol/
+---
+
 # INDI Protocol
 
 ## Overview
@@ -22,11 +29,11 @@ specific function of the driver. Any property may contain one or more elements.
 
 There are five types of INDI properties:
 
-* Text property: Property to transfer simple text information in ISO-8859-1. The text is not encoded or encrypted on transfer. If the text includes elements that can break XML syntax, a BLOB property should be used to make the transfer.
-* Number property: Property to transfer numeric information with configurable minimum, maximum, and step values. The supported number formats are decimal and sexigesmal. The property includes a GUI hint element in printf style format to enable clients to properly display numeric properties.
-* Switch property: Property to hold a group of options or selections (Represented in GUI by buttons and check boxes).
-* Light property: Property to hold a group of status indicators (Represented in GUI by colored LEDs).
-* BLOB property: BLOB is a Binary Large OBject used to transfer binary data to and from drivers.
+- Text property: Property to transfer simple text information in ISO-8859-1. The text is not encoded or encrypted on transfer. If the text includes elements that can break XML syntax, a BLOB property should be used to make the transfer.
+- Number property: Property to transfer numeric information with configurable minimum, maximum, and step values. The supported number formats are decimal and sexigesmal. The property includes a GUI hint element in printf style format to enable clients to properly display numeric properties.
+- Switch property: Property to hold a group of options or selections (Represented in GUI by buttons and check boxes).
+- Light property: Property to hold a group of status indicators (Represented in GUI by colored LEDs).
+- BLOB property: BLOB is a Binary Large OBject used to transfer binary data to and from drivers.
 
 For example, all INDI devices share the CONNECTION standard switch property. The
 CONNECTION property has two elements: CONNECT and DISCONNECT switches. GUI

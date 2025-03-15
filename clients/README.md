@@ -1,3 +1,10 @@
+---
+title: Client Development
+nav_order: 7
+has_children: true
+permalink: /clients/
+---
+
 # INDI Client Development
 
 An INDI client is defined as any software that communicates with either INDI server and/or drivers using the [INDI XML Protocol](../protocol/README.md). While clients may communicate with INDI drivers directly, in practice this is uncommon and all existing clients communicate with drivers via the [INDI server](../indiserver/README.md).

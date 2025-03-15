@@ -1,3 +1,10 @@
+---
+title: INDI Server
+nav_order: 4
+has_children: true
+permalink: /indiserver/
+---
+
 # indiserver
 
 For a comprehensive guide to the INDI server, including installation, configuration, command-line options, and advanced usage scenarios, please see the [INDI Server Guide](indiserver-guide.md).

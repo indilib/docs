@@ -1,6 +1,9 @@
 ---
-sort: 12
+title: Coming from ASCOM
+nav_order: 6
+parent: Basics
 ---
+
 ## Coming from ASCOM development
 
 Jumping into INDI development when coming from ASCOM development can be a steep
@@ -14,8 +17,8 @@ or none at all, just using command line tools.
 
 I'm going to start with a few assumptions to kick us off.
 
-* OS: Ubuntu Focal
-* IDE: VSCode
+- OS: Ubuntu Focal
+- IDE: VSCode
 
 You can do development on other operating systems, but it is definitely easiest
 to get started in Linux, specifically in Ubuntu. Focal is the latest LTS (long
@@ -64,9 +67,9 @@ sudo apt install libindi-dev libnova-dev libz-dev libgsl-dev
 
 INDI development is split across three main repositories:
 
-* [INDI](https://github.com/indilib/indi)
-* [INDI 3rd Party](https://github.com/indilib/indi-3rdparty)
-* [KStars](https://invent.kde.org/education/kstars/)
+- [INDI](https://github.com/indilib/indi)
+- [INDI 3rd Party](https://github.com/indilib/indi-3rdparty)
+- [KStars](https://invent.kde.org/education/kstars/)
 
 The first is the main repo for core indi drivers, base classes, indiserver, etc.
 The second is used for drivers that require 3rd party libraries in order to work.
@@ -305,10 +308,10 @@ sudo dpkg -i code_*.deb
 
 Launch VS Code, and install the following extensions to make our lives easier:
 
-* ms-vscode.cpptools
-* ms-vscode.cmake-tools
-* twxs.cmake
-* dotjoshjohnson.xml
+- ms-vscode.cpptools
+- ms-vscode.cmake-tools
+- twxs.cmake
+- dotjoshjohnson.xml
 
 Once these are installed, we need to open the folder holding our source. You can
 do this from the terminal by going to the root folder of your source (the folder
@@ -328,38 +331,33 @@ First, `tasks.json`:
 
 ```json
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build-cmake",
-            "type": "shell",
-            "options": {
-                "cwd": "${workspaceRoot}/build"
-            },
-            "command": "cmake --build .",
-            "problemMatcher": [
-                "$gcc"
-            ]
-        },
-        {
-            "label": "kill",
-            "type": "shell",
-            "options": {
-                "cwd": "${workspaceRoot}/build"
-            },
-            "command": "killall indiserver",
-            "problemMatcher": []
-        },
-        {
-            "label": "Build and Kill",
-            "dependsOn": [
-                "kill",
-                "build-cmake"
-            ]
-        }
-    ]
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-cmake",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceRoot}/build"
+      },
+      "command": "cmake --build .",
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "kill",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceRoot}/build"
+      },
+      "command": "killall indiserver",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build and Kill",
+      "dependsOn": ["kill", "build-cmake"]
+    }
+  ]
 }
 ```
 
@@ -367,47 +365,47 @@ Next, `launch.json`:
 
 ```json
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "(gdb) Launch",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "/usr/bin/indiserver",
+      "args": [
+        "-v",
+        "indi_mycustomdriver",
+        "indi_simulator_telescope",
+        "indi_simulator_ccd"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [
         {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "/usr/bin/indiserver",
-            "args": [
-                "-v",
-                "indi_mycustomdriver",
-                "indi_simulator_telescope",
-                "indi_simulator_ccd",
-            ],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [
-                {
-                    "name": "PATH",
-                    "value": "${workspaceFolder}/build:${env:PATH}"
-                }
-            ],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Follow exec for gdb",
-                    "text": "-gdb-set follow-fork-mode child",
-                    "ignoreFailures": true
-                }
-            ],
-            "preLaunchTask": "Build and Kill"
+          "name": "PATH",
+          "value": "${workspaceFolder}/build:${env:PATH}"
         }
-    ]
+      ],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Follow exec for gdb",
+          "text": "-gdb-set follow-fork-mode child",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "Build and Kill"
+    }
+  ]
 }
 ```
 

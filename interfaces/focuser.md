@@ -1,6 +1,9 @@
 ---
-sort: 10
+title: Focuser Interface
+nav_order: 3
+parent: Device Interfaces
 ---
+
 ## Focuser
 
 Now let's talk about the `Focuser` base class.

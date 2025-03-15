@@ -1,5 +1,7 @@
 ---
-sort: 4
+title: Telescope Interface
+nav_order: 2
+parent: Device Interfaces
 ---
 
 # Implementing the Telescope Interface

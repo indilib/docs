@@ -1,5 +1,7 @@
 ---
-sort: 8
+title: Protocol Guide
+nav_order: 8
+parent: Guides
 ---
 
 # INDI Protocol Guide

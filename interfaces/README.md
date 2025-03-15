@@ -1,3 +1,10 @@
+---
+title: Device Interfaces
+nav_order: 5
+has_children: true
+permalink: /interfaces/
+---
+
 # INDI Device Interfaces
 
 This directory contains documentation for INDI device interfaces. All of these are core interfaces in the INDI library.

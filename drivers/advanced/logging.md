@@ -1,6 +1,9 @@
 ---
-sort: 6
+title: Logging in INDI Drivers
+nav_order: 2
+parent: Advanced
 ---
+
 # Logging in INDI Drivers
 
 INDI provides a [Debugging and Logging API](http://www.indilib.org/api/structINDI_1_1Logger.html) where the driver can log different types of messages to the client and/or log file along with time in seconds since the start of the driver.
@@ -17,29 +20,29 @@ Note that `IDLog` does not append a new line, you have to insert it explicitly. 
 
 When using the Debugging & Logging API, the driver can log messages using `DEBUG` and `DEBUGF` macros. By default, the logger defines 4 levels of debugging/logging levels:
 
-* Errors: Use macro `DEBUG(INDI::Logger::DBG_ERROR, "My Error Message")`
-* Warnings: Use macro `DEBUG(INDI::Logger::DBG_WARNING, "My Warning Message")`
-* Session: Session messages are the regular status messages from the driver. Use macro `DEBUG(INDI::Logger::DBG_SESSION, "My Message")`
-* Driver Debug: Driver debug messages are detailed driver debug output used for diagnostic purposes. Use macro `DEBUG(INDI::Logger::DBG_DEBUG, "My Driver Debug Message")`
+- Errors: Use macro `DEBUG(INDI::Logger::DBG_ERROR, "My Error Message")`
+- Warnings: Use macro `DEBUG(INDI::Logger::DBG_WARNING, "My Warning Message")`
+- Session: Session messages are the regular status messages from the driver. Use macro `DEBUG(INDI::Logger::DBG_SESSION, "My Message")`
+- Driver Debug: Driver debug messages are detailed driver debug output used for diagnostic purposes. Use macro `DEBUG(INDI::Logger::DBG_DEBUG, "My Driver Debug Message")`
 
 Alternatively, The `DEBUGF` macro is used if you have printf-style message. e.g. `DEBUGF(INDI::Logger::DBG_SESSION, "Hello %s!", "There")`
 
 There are shorter versions of these logging macros as well:
 
-* `LOG_ERROR("error message");`
-* `LOG_WARN("warning message");`
-* `LOG_INFO("session message");`
-* `LOG_DEBUG("debug message");`
-* `LOG_EXTRA1("extra1 message");`
-* `LOG_EXTRA2("extra2 message");`
-* `LOG_EXTRA3("extra3 message");`
-* `LOGF_ERROR("error %s", "message");`
-* `LOGF_WARN("warning %s", "message");`
-* `LOGF_INFO("session %s", "message");`
-* `LOGF_DEBUG("debug %s", "message");`
-* `LOGF_EXTRA1("extra1 %s", "message");`
-* `LOGF_EXTRA2("extra2 %s", "message");`
-* `LOGF_EXTRA3("extra3 %s", "message");`
+- `LOG_ERROR("error message");`
+- `LOG_WARN("warning message");`
+- `LOG_INFO("session message");`
+- `LOG_DEBUG("debug message");`
+- `LOG_EXTRA1("extra1 message");`
+- `LOG_EXTRA2("extra2 message");`
+- `LOG_EXTRA3("extra3 message");`
+- `LOGF_ERROR("error %s", "message");`
+- `LOGF_WARN("warning %s", "message");`
+- `LOGF_INFO("session %s", "message");`
+- `LOGF_DEBUG("debug %s", "message");`
+- `LOGF_EXTRA1("extra1 %s", "message");`
+- `LOGF_EXTRA2("extra2 %s", "message");`
+- `LOGF_EXTRA3("extra3 %s", "message");`
 
 Note that these macros only work when your current scope has a `getDeviceName` function or method.
 

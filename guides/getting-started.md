@@ -1,5 +1,7 @@
 ---
-sort: 1
+title: Getting Started with INDI
+nav_order: 1
+parent: Guides
 ---
 
 # Getting Started with INDI

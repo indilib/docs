@@ -1,3 +1,11 @@
+---
+title: Advanced
+nav_order: 2
+parent: Driver Development
+has_children: true
+permalink: /drivers/advanced/
+---
+
 # INDI Driver Advanced Topics
 
 This directory contains documentation for advanced topics in INDI driver development.

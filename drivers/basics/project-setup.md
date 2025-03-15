@@ -1,6 +1,9 @@
 ---
-sort: 1
+title: Project Setup
+nav_order: 8
+parent: Basics
 ---
+
 ## Project Setup
 
 First things first, there is nothing special you need to develop for INDI. You can use any
@@ -115,15 +118,15 @@ be named to match your executable name.
 
 `group` should be one of the following:
 
-* Telescopes
-* Focusers
-* CCDs
-* Spectrographs
-* Filter Wheels
-* Auxiliary
-* Domes
-* Weather
-* Agent
+- Telescopes
+- Focusers
+- CCDs
+- Spectrographs
+- Filter Wheels
+- Auxiliary
+- Domes
+- Weather
+- Agent
 
 `device -> label` is a friendly name for your device.
 

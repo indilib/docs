@@ -1,3 +1,11 @@
+---
+title: Basics
+nav_order: 1
+parent: Driver Development
+has_children: true
+permalink: /drivers/basics/
+---
+
 # INDI Driver Basics
 
 This directory contains documentation for the basic concepts and implementation details of INDI drivers.

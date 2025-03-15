@@ -1,5 +1,7 @@
 ---
-sort: 3
+title: Camera Interface
+nav_order: 1
+parent: Device Interfaces
 ---
 
 # Implementing the Camera Interface

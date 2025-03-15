@@ -1,6 +1,9 @@
 ---
-sort: 5
+title: Driver Loop
+nav_order: 3
+parent: Advanced
 ---
+
 ## Driver Loop
 
 You'll probably want to do more than just respond to user input in your driver.
