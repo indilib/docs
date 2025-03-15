@@ -3,6 +3,88 @@ lang: en
 description: Docs on how to create INDI drivers and clients.
 
 remote_theme: just-the-docs/just-the-docs
+
+# Enable theme toggle
+enable_dark_mode_toggle: true
+
+# Set a path/url to a favicon
+favicon_ico: "/assets/images/favicon.ico"
+
+# Set a path/url to a logo that will be displayed instead of the title
+# logo: "/assets/images/logo.png"
+
+# Enable or disable the site search
+search_enabled: true
+
+# Set the search token separator
+search_tokenizer_separator: /[\s/]+/
+
+# Enable or disable heading anchors
+heading_anchors: true
+
+# Aux links for the upper right navigation
+aux_links:
+  "INDI Library on GitHub":
+    - "//github.com/indilib/indi"
+
+# Makes Aux links open in a new tab
+aux_links_new_tab: true
+
+# Sort order for navigation links
+# nav_sort: case_insensitive # default, equivalent to nil
+nav_sort: case_sensitive # Capital letters sorted before lowercase
+
+# Footer content
+# appears at the bottom of every page's main content
+footer_content: "Copyright &copy; 2003-2025 INDI Library. Distributed under the <a href=\"https://github.com/indilib/indi/blob/master/LICENSE\">LGPL License.</a>"
+
+# Back to top link
+back_to_top: true
+back_to_top_text: "Back to top"
+
+# Footer last edited timestamp
+last_edit_timestamp: true # show or hide edit time
+last_edit_time_format: "%b %e %Y at %I:%M %p" # format
+
+# Footer "Edit this page on GitHub" link text
+gh_edit_link: true # show or hide edit this page link
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/indilib/docs" # the github URL for your repo
+gh_edit_branch: "master" # the branch that your docs is served from
+gh_edit_view_mode: "tree" # "tree" or "edit" if you want the user to jump into the editor immediately
+
+# Color scheme supports "light" (default) and "dark"
+color_scheme: "light"
+
+# Google Analytics Tracking
+# ga_tracking: UA-XXXXXXXX-X
+# ga_tracking_anonymize_ip: true # Use GDPR compliant Google Analytics settings
+
+# Define Jekyll collections
+collections:
+  # Define a collection named "docs", its documents reside in the "_docs" directory
+  docs:
+    permalink: "/:collection/:path/"
+    output: true
+
+just_the_docs:
+  # Define which collections are used in just-the-docs
+  collections:
+    # Reference the "docs" collection
+    docs:
+      # Give the collection a name
+      name: Documentation
+      # Exclude the collection from the navigation
+      # Supports true or false (default)
+      nav_exclude: false
+      # Exclude the collection from the search
+      # Supports true or false (default)
+      search_exclude: false
+
+# Sass configuration
+sass:
+  sass_dir: _sass
+  style: compressed
 exclude:
   - CNAME
   - drivers/examples

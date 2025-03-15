@@ -1,0 +1,53 @@
+<script>
+  const toggleDarkMode = document.querySelector('.js-toggle-dark-mode');
+  const cssFile = document.querySelector('[rel="stylesheet"]');
+  const originalCssRef = cssFile.getAttribute('href');
+  const darkModeCssRef = originalCssRef.replace('just-the-docs.css', 'dark-mode-preview.css');
+  const buttonCopy = ['Switch to dark mode', 'Switch to light mode'];
+  let isDarkMode = localStorage.getItem('theme') === 'dark';
+
+  // Initialize the button text based on the current theme
+  function initializeThemeToggle() {
+    if (isDarkMode) {
+      cssFile.setAttribute('href', darkModeCssRef);
+      toggleDarkMode.textContent = buttonCopy[1];
+    } else {
+      cssFile.setAttribute('href', originalCssRef);
+      toggleDarkMode.textContent = buttonCopy[0];
+    }
+  }
+
+  // Set the theme based on user preference or system preference
+  function setThemePreference() {
+    if (localStorage.getItem('theme') === null) {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        localStorage.setItem('theme', 'dark');
+        isDarkMode = true;
+      } else {
+        localStorage.setItem('theme', 'light');
+        isDarkMode = false;
+      }
+    }
+    initializeThemeToggle();
+  }
+
+  // Add event listener to toggle button
+  if (toggleDarkMode) {
+    toggleDarkMode.addEventListener('click', function() {
+      if (isDarkMode) {
+        cssFile.setAttribute('href', originalCssRef);
+        toggleDarkMode.textContent = buttonCopy[0];
+        localStorage.setItem('theme', 'light');
+        isDarkMode = false;
+      } else {
+        cssFile.setAttribute('href', darkModeCssRef);
+        toggleDarkMode.textContent = buttonCopy[1];
+        localStorage.setItem('theme', 'dark');
+        isDarkMode = true;
+      }
+    });
+  }
+
+  // Initialize theme on page load
+  setThemePreference();
+</script>
