@@ -62,24 +62,22 @@ indi_simulator_telescope
 
 Using Telnet can be useful to test INDI server, but not useful to create a client application. For this there are multiple options:
 
-
-* C/C++ Application Development: [INDI::BaseClient](http://www.indilib.org/api/classINDI_1_1BaseClient.html) for POSIX systems and [INDI::BaseClientQt](http://www.indilib.org/api/classINDI_1_1BaseClientQt.html) for cross-platform development based on the Qt5 toolkit.
-* C# Application Development: [INDI Sharp](https://sourceforge.net/projects/indisharp/) project consists of a .NET/Mono assembly containing a simple INDI client and a WinForm that permits to connect to astronomical equipment INDI server, and to use drivers connected at it.
-* Python Application Development: [PyINDI](https://indilib.org/support/tutorials/166-installing-and-using-the-python-pyndi-client-on-raspberry-pi.html) provides all the functionality requires to communicate with INDI server and drivers.
-* Others: You can investigate [many existing INDI clients](https://indilib.org/about/clients.html), some of which are Open Source.
+- C/C++ Application Development: [INDI::BaseClient](http://www.indilib.org/api/classINDI_1_1BaseClient.html) for POSIX systems and [INDI::BaseClientQt](http://www.indilib.org/api/classINDI_1_1BaseClientQt.html) for cross-platform development based on the Qt5 toolkit.
+  astronomical equipment INDI server, and to use drivers connected at it.
+- Python Application Development: [PyINDI](https://indilib.org/support/tutorials/166-installing-and-using-the-python-pyndi-client-on-raspberry-pi.html) provides all the functionality requires to communicate with INDI server and drivers.
+- Others: You can investigate [many existing INDI clients](https://indilib.org/about/clients.html), some of which are Open Source.
 
 Officially, INDI Library provides BaseClient and BaseClientQt5 classes that encapsulates the most common functions required for a minimal INDI client. It supports:
 
-
-* Connecting to INDI servers.
-* Creation & manipulation of virtual devices: The class keeps a list of devices as they arrive from INDI server. It creates a virtual device to manage setting and retrieving the driver properties and status.
-* Event notifications: The class sends event notification when:
-    * New device is created.
-    * New property vector is defined.
-    * New property vector is set.
-    * New message from driver.
-    * Device property is removed.
-    * Device is removed.
-    * Server connected/disconnected.
+- Connecting to INDI servers.
+- Creation & manipulation of virtual devices: The class keeps a list of devices as they arrive from INDI server. It creates a virtual device to manage setting and retrieving the driver properties and status.
+- Event notifications: The class sends event notification when:
+  - New device is created.
+  - New property vector is defined.
+  - New property vector is set.
+  - New message from driver.
+  - Device property is removed.
+  - Device is removed.
+  - Server connected/disconnected.
 
 INDI is shipped with a simple client example. To find more information, read the [INDI Client Development Tutorial](tutorial.md).

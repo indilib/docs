@@ -52,7 +52,7 @@ INDI provides several base classes that you can inherit from to create your driv
 - **[INDI::GPS](https://www.indilib.org/api/classINDI_1_1GPS.html)**: For GPS and other location devices.
 - **[INDI::Rotator](https://www.indilib.org/api/classINDI_1_1Rotator.html)**: For rotators and other rotation devices.
 - **[INDI::Detector](https://www.indilib.org/api/classINDI_1_1Detector.html)**: For detectors and other sensing devices.
-- **[INDI::AUXInterface](https://www.indilib.org/api/classINDI_1_1AUXInterface.html)**: For auxiliary interfaces and other miscellaneous devices.
+- **INDI::AUX**: For auxiliary interfaces and other miscellaneous devices.
 
 Choose the base class that best matches your device's functionality. If your device doesn't fit into any of these categories, use `INDI::DefaultDevice`.
 
@@ -505,7 +505,7 @@ INDI provides several device interfaces that you can implement to expose specifi
 - **[GPS Interface](https://www.indilib.org/api/classINDI_1_1GPS.html)**: For GPS and other location devices.
 - **[Rotator Interface](https://www.indilib.org/api/classINDI_1_1Rotator.html)**: For rotators and other rotation devices.
 - **[Detector Interface](https://www.indilib.org/api/classINDI_1_1Detector.html)**: For detectors and other sensing devices.
-- **[AUX Interface](https://www.indilib.org/api/classINDI_1_1AUXInterface.html)**: For auxiliary interfaces and other miscellaneous devices.
+- **AUX Interface**: For auxiliary interfaces and other miscellaneous devices.
 - **[Output Interface](https://www.indilib.org/api/classINDI_1_1OutputInterface.html)**: For devices that provide output control functionality.
 - **[Guider Interface](https://www.indilib.org/api/classINDI_1_1GuiderInterface.html)**: For autoguider devices.
 - **[Dustcap Interface](https://www.indilib.org/api/classINDI_1_1DustCapInterface.html)**: For dust cap devices.
