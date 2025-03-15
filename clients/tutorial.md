@@ -1,6 +1,7 @@
 ---
 sort: 1
 ---
+
 # Client Development Tutorial
 
 In this short tutorial, our client (`tutorial_client`) needs connect to an INDI server which may be running several drivers.
@@ -13,7 +14,9 @@ The properties of the device are also dynamic, that is, they can come and go. To
 The source for this tutorial can be found [here](https://github.com/indilib/indi/tree/master/examples/tutorial_six).
 
 ## Building
+
 Let's follow the example code:
+
 ### tutorial_client.h
 
 ```cpp
@@ -34,6 +37,7 @@ class MyClient : public INDI::BaseClient
         INDI::BaseDevice mSimpleCCD;
 };
 ```
+
 Above, we declare our class with the methods of interest to us.
 By inheriting from the `INDI::BaseClient` class, we get a whole set of functionalities that will allow us to communicate with the INDI server and to manipulate drivers.
 Additionally, the overwritten method `newMessage` will allow us to read messages from the server.
@@ -92,13 +96,15 @@ MyClient::MyClient()
 
 The names of the observed properties result from the structure of the given driver.
 In our case, for the `Simple CCD` driver, we are interested in:
+
 - `CONNECTION` - property of type `INDI::PropertySwitch`, however, if we are not interested in the property, but in its appearance, we can omit the variable name in the argument as its type, using the generic `INDI::Property`
 - `CCD_TEMPERATURE` - property of type `INDI::PropertyNumber`, to which we can enter the set temperature of the camera and read the current one
 - `CCD1` - property of type `INDI::PropertyBlob`, which stores the captured photo from the camera
 
-An important note to consider is that there is no way a client can tell whether or not we have received all the properties of a particular driver. This is because of the very nature of INDI protocol where devices are discovered via introspection. Therefore, the client may either choose to wait for a period of time until it begins processing the driver, or watch for a particular property of interest. Since we are planning to change the CCD temperature, we are interested in [INDI Standard Property](../drivers/README.md#standard-properties) `CCD_TEMPERATURE` which we will watch for.
+An important note to consider is that there is no way a client can tell whether or not we have received all the properties of a particular driver. This is because of the very nature of INDI protocol where devices are discovered via introspection. Therefore, the client may either choose to wait for a period of time until it begins processing the driver, or watch for a particular property of interest. Since we are planning to change the CCD temperature, we are interested in [INDI Standard Property](../standard-properties.md) `CCD_TEMPERATURE` which we will watch for.
 
 To detect the change of a given property, we use the `onUpdate` method, which calls the function we specified when the property is updated:
+
 ```cpp
 device.watchProperty("CCD_TEMPERATURE", [](INDI::PropertyNumber property)
 {
@@ -112,6 +118,7 @@ device.watchProperty("CCD_TEMPERATURE", [](INDI::PropertyNumber property)
 ```
 
 Now let's add an implementation that provides us with:
+
 1. after the appearance of the `CONNECT` property, connect to the device
 1. after the appearance of the property `CCD_TEMPERATURE`, set the temperature to -20 C
 1. when changing the property `CCD_TEMPERATURE`, display the current temperature, and when it reaches -20 C, take a picture
@@ -225,14 +232,14 @@ class MyClient : public INDI::BaseClient
 }
 ```
 
-When the client detects a new device, *newDevice* is called and you can process the device.
+When the client detects a new device, _newDevice_ is called and you can process the device.
 
 ```cpp
 void MyClient::newProperty(INDI::Property property)
-{   
+{
     auto baseDevice = property.getBaseDevice();
     auto deviceName = baseDevice.getDeviceName();
- 
+
     // With DRIVER_INFO defined, we have access to getDriverInterface()
     if (property.isNameMatch("DRIVER_INFO"))
     {
@@ -243,7 +250,7 @@ void MyClient::newProperty(INDI::Property property)
         }
         else if (interface & BaseDevice::CCD_INTERFACE)
         {
-            IDLog("Found camera: %s\n", deviceName);            
+            IDLog("Found camera: %s\n", deviceName);
             setBLOBMode(B_ALSO, deviceName, nullptr);
             enableDirectBlobAccess(deviceName, nullptr);
         }
@@ -255,7 +262,7 @@ In any property is updated from the server, it can be inspected in updatePropert
 
 ```cpp
 void MyClient::updateProperty(INDI::Property property)
-{       
+{
     if (property.isNameMatch("CCD_TEMPERATURE"))
     {
         // Need to use .getNumber to convert the generic property to a NUMBER property.

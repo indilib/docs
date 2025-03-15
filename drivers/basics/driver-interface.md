@@ -41,12 +41,12 @@ Many of these interfaces have base classes you can and should inherit from if yo
 
 - `TELESCOPE_INTERFACE`
 
-  - `liibindi/inditelescope.h`
+  - `libindi/inditelescope.h`
   - `Telescope`
 
 - `CCD_INTERFACE`
 
-  - `liibindi/indiccd.h`
+  - `libindi/indiccd.h`
   - `CCD`
 
 - `GUIDER_INTERFACE`
@@ -110,7 +110,7 @@ Many of these interfaces have base classes you can and should inherit from if yo
 
 Each of these base classes have methods you must override for your driver to work correctly.
 They also take care of creating any
-[standard properties](README.md#standard-properties)
+[standard properties](../standard-properties.md)
 that your device type needs to implement.
 
 For example, if you want to implement a guider, you'll need to override these methods

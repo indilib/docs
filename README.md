@@ -4,6 +4,36 @@ Welcome to the home of [INDI](https://indilib.org) technical documentation.
 Here you will find information on how to build INDI drivers and clients, as well
 as information on the INDI protocol itself.
 
+## Documentation Overview
+
+This documentation is organized into several sections to help you get started with INDI development:
+
+- **[Guides](guides/)**: General documentation including getting started, best practices, client development, and troubleshooting.
+- **[INDI Server](indiserver/)**: Guide to setting up, configuring, and managing the INDI server.
+- **[Protocol](protocol/)**: Detailed explanation of the INDI protocol, message format, and communication flow.
+- **Driver Development**:
+  - **[Basics](drivers/basics/)**: Fundamental concepts for creating INDI drivers
+  - **[Advanced](drivers/advanced/)**: Advanced topics for driver development
+  - **[Examples](drivers/examples/)**: Example driver implementations
+- **[Device Interfaces](interfaces/)**: Documentation for implementing various device interfaces (CCD, Telescope, Focuser, etc.).
+- **[Images](images/)**: Diagrams and screenshots illustrating INDI concepts.
+
+### Key Documentation Pages
+
+- [Getting Started with INDI](guides/getting-started.md)
+- [INDI Server Guide](indiserver/indiserver-guide.md)
+- [INDI Protocol Guide](guides/protocol-guide.md)
+- [Creating Custom INDI Drivers](drivers/basics/custom-driver.md)
+- [INDI Driver Interface](drivers/basics/driver-interface.md)
+- [INDI Client Development Guide](guides/client-development.md)
+- [INDI Connection Plugins](guides/connection-plugins.md)
+- [Implementing the CCD Interface](interfaces/ccd-interface.md)
+- [Implementing the Telescope Interface](interfaces/telescope-interface.md)
+- [Implementing the Focuser Interface](interfaces/focuser.md)
+- [Implementing the Guider Interface](interfaces/guider.md)
+- [INDI Driver Development Best Practices](guides/best-practices.md)
+- [Troubleshooting INDI Drivers](guides/troubleshooting.md)
+
 First, some helpful links:
 
 - INDI Links
@@ -100,6 +130,11 @@ INDI Library provides
 
 - [Astroberry Repo](https://www.astroberry.io/repo/)
 - [AstroPI3 Script](https://github.com/rlancaste/AstroPi3)
+- [Nou Scripts](https://gitea.nouspiro.space/nou/astro-soft-build)
+
+### StellarMate
+
+- [StellarMate Website](https://www.stellarmate.com/)
 
 ### Source
 
