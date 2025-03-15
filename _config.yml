@@ -4,7 +4,7 @@ description: Docs on how to create INDI drivers and clients.
 
 remote_theme: just-the-docs/just-the-docs
 
-# Enable theme toggle
+# Enable or disable the site-wide dark mode option
 enable_dark_mode_toggle: true
 
 # Set a path/url to a favicon
