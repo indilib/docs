@@ -16,6 +16,7 @@ For comprehensive guides on INDI driver development, please see the following pa
 
 ### Basic Driver Development
 
+- [Simple Driver](basics/simple-driver.md): A minimal example of an INDI driver
 - [Driver Interface](basics/driver-interface.md): Overview of the different device interfaces in INDI
 - [Creating Custom INDI Drivers](basics/custom-driver.md): Guide to creating custom INDI drivers
 - [Properties](basics/properties.md): Information about INDI properties and how to use them
