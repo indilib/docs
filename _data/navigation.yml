@@ -31,6 +31,8 @@ main:
     url: /interfaces/
   - title: Client Development
     url: /clients/
+  - title: Scripting
+    url: /scripting/
   - title: Support
     url: /support/
     children:

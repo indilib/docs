@@ -91,19 +91,22 @@ indiserver indi_simulator_ccd indi_simulator_telescope indi_simulator_focus
 
 The INDI server supports several command-line options:
 
-- `-p port`: Listen on the given port (default: 7624)
-- `-r`: Allow remote connections (default: only local connections)
-- `-v`: Enable verbose output
-- `-m MB`: Limit memory used by each driver to MB megabytes
-- `-f path`: Log driver messages to a file
-- `-l dir`: Load driver(s) from the given directory
-- `-d`: Enable debug output
-- `-s`: Force driver to use syslog for logging
-- `-n`: No auto-connect when using driver selection
-- `-c config`: Load a configuration file
-- `-w`: Wait for all drivers to be ready before accepting connections
-- `-u`: Run drivers as a specific user
-- `-g`: Run drivers as a specific group
+```
+Usage: indiserver [options] driver [driver ...]
+Purpose: server for local and remote INDI drivers
+Options:
+ -l d     : log driver messages to <d>/YYYY-MM-DD.islog
+ -m m     : kill client if gets more than this many MB behind, default 128
+ -d m     : drop streaming blobs if client gets more than this many MB behind, default 5. 0 to disable
+ -u path  : Path for the local connection socket (abstract), default /tmp/indiserver
+ -p p     : alternate IP port, default 7624
+ -r r     : maximum driver restarts on error, default 10
+ -f path  : Path to fifo for dynamic startup and shutdown of drivers.
+ -v       : show key events, no traffic
+ -vv      : -v + key message content
+ -vvv     : -vv + complete xml
+driver    : executable or [device]@host[:port]
+```
 
 For example, to start the INDI server on port 8000 with verbose output:
 
@@ -111,15 +114,42 @@ For example, to start the INDI server on port 8000 with verbose output:
 indiserver -p 8000 -v indi_simulator_ccd
 ```
 
-### Driver Selection
+### FIFO Mode for Dynamic Driver Startup and Shutdown
 
-The INDI server can dynamically load drivers based on client requests. To enable driver selection:
+The INDI server supports a FIFO (First In, First Out) mode for dynamic driver startup and shutdown. This allows you to add or remove drivers while the server is running, without having to restart the server.
+
+To enable FIFO mode, use the `-f` option followed by the path to the FIFO file:
 
 ```bash
-indiserver -l /usr/share/indi
+indiserver -f /tmp/indififo indi_simulator_ccd
 ```
 
-With driver selection enabled, clients can request specific drivers to be loaded by sending a `<getProperties device="driver_name"/>` message. The server will search for a driver with the given name in the specified directory and load it if found.
+Once the server is running in FIFO mode, you can add or remove drivers by writing commands to the FIFO file:
+
+- To start a new driver, write `start driver_name` to the FIFO file:
+
+  ```bash
+  echo "start indi_simulator_telescope" > /tmp/indififo
+  ```
+
+- To stop a running driver, write `stop driver_name` to the FIFO file:
+  ```bash
+  echo "stop indi_simulator_ccd" > /tmp/indififo
+  ```
+
+This is particularly useful for applications that need to dynamically manage drivers based on user input or other events.
+
+For more detailed information about INDI in FIFO mode, see the [INDI Server documentation](https://indilib.org/develop/developer-manual/92-indi-server.html).
+
+### Driver Reliability
+
+The INDI server can automatically restart drivers that crash or exit with an error. By default, the server will restart a driver up to 10 times if it exits with an error. You can change this limit using the `-r` option:
+
+```bash
+indiserver -r 5 indi_simulator_ccd
+```
+
+This sets the maximum number of driver restarts to 5.
 
 ## Connecting to INDI Server
 
@@ -136,40 +166,19 @@ For example, to connect to a local INDI server using the `indi_getprop` command-
 indi_getprop -h localhost -p 7624
 ```
 
-## Server Configuration
+## Local Connection Socket
 
-The INDI server can be configured using a configuration file. The configuration file specifies which drivers to load and their options.
-
-Example configuration file:
-
-```xml
-<INDIServer>
-  <Driver name="CCD Simulator">
-    <executable>indi_simulator_ccd</executable>
-    <version>1.0</version>
-  </Driver>
-  <Driver name="Telescope Simulator">
-    <executable>indi_simulator_telescope</executable>
-    <version>1.0</version>
-  </Driver>
-</INDIServer>
-```
-
-To load a configuration file:
+The INDI server uses a local connection socket for communication between the server and drivers. By default, this socket is located at `/tmp/indiserver`. You can specify a different path using the `-u` option:
 
 ```bash
-indiserver -c config.xml
+indiserver -u /path/to/socket indi_simulator_ccd
 ```
+
+This can be useful if you need to run multiple INDI servers on the same machine, or if you need to use a different path for security reasons.
 
 ## Server Security
 
-By default, the INDI server only accepts connections from the local machine. To allow remote connections, use the `-r` option:
-
-```bash
-indiserver -r indi_simulator_ccd
-```
-
-For more secure remote access, consider using SSH tunneling:
+By default, the INDI server only accepts connections from the local machine. For secure remote access, consider using SSH tunneling or [EkosLive](https://ekoslive.com):
 
 ```bash
 ssh -L 7624:localhost:7624 user@remote_host
@@ -179,27 +188,28 @@ Then connect to the local port 7624, which will be forwarded to the remote INDI 
 
 ## Server Logging
 
-The INDI server can log driver messages to a file or to syslog. To log to a file:
+The INDI server can log driver messages to a directory. To enable logging:
 
 ```bash
-indiserver -f /var/log/indi.log indi_simulator_ccd
+indiserver -l /var/log/indi indi_simulator_ccd
 ```
 
-To log to syslog:
-
-```bash
-indiserver -s indi_simulator_ccd
-```
+This will create log files in the specified directory with names in the format `YYYY-MM-DD.islog`.
 
 ## Server Performance
 
-The INDI server is designed to be lightweight and efficient. However, when dealing with large BLOBs (e.g., images from cameras), it can consume significant resources. To limit the memory used by each driver:
+The INDI server is designed to be lightweight and efficient. However, when dealing with large BLOBs (e.g., images from cameras), it can consume significant resources. The server provides options to manage this:
+
+- `-m m`: Kill client if it gets more than `m` MB behind (default: 128)
+- `-d m`: Drop streaming blobs if client gets more than `m` MB behind (default: 5, 0 to disable)
+
+For example:
 
 ```bash
-indiserver -m 64 indi_simulator_ccd
+indiserver -m 64 -d 10 indi_simulator_ccd
 ```
 
-This limits each driver to 64 MB of memory.
+This kills clients that get more than 64 MB behind and drops streaming blobs if clients get more than 10 MB behind.
 
 ## Server Extensions
 

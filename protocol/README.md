@@ -36,7 +36,65 @@ The INDI protocol has evolved over time to support new features and improve exis
 - **1.3**: Added BLOB elements for transferring binary data.
 - **1.0**: Initial release of the INDI protocol.
 
+## Protocol Architecture
+
+The INDI protocol follows a client-server architecture:
+
+- **INDI Device**: Offers a service cast as a set of Properties in the INDI format.
+- **INDI Client**: A process which connects to an INDI Device, queries for its set of control Properties, and possibly sends requests to change those Properties.
+- **INDI Server**: An intermediary that can connect multiple Clients to multiple Devices, handling message routing and implementing policies for administrative issues.
+
+INDI Clients and Devices need not be in direct contact. The protocol is designed to accommodate arbitration and broadcasting among several Clients and Devices. The protocol can support connection topologies ranging from one-to-one on a single system to many-to-many between systems of different types.
+
 ## Protocol Structure
+
+### XML Message Format
+
+INDI messages are formatted as XML documents. Each message consists of one or more XML elements that represent INDI commands or properties.
+
+#### Basic XML Structure
+
+The basic structure of an INDI XML message is as follows:
+
+```xml
+<command device="device_name" name="property_name" ...>
+    <element name="element_name" ...>element_value</element>
+    ...
+</command>
+```
+
+Where:
+
+- `command` is the INDI command (e.g., `defNumberVector`, `newNumberVector`, `setNumberVector`).
+- `device` is the name of the device.
+- `name` is the name of the property.
+- `element` is an element of the property.
+- `element_name` is the name of the element.
+- `element_value` is the value of the element.
+
+#### Data Types and Formats
+
+All PCDATA uses character set ISO 8651-1.
+
+The format of a numberValue can be:
+
+- Integer
+- Real
+- Sexagesimal (with separators: space, colon, or semicolon)
+
+A numberFormat can be:
+
+- A printf-style format specification appropriate for C-type double
+- An INDI style "m" to specify sexagesimal in the form "%\<w>.\<f>m" where:
+  - \<w> is the total field width
+  - \<f> is the width of the fraction, with valid values:
+    - 9 -> :mm:ss.ss
+    - 8 -> :mm:ss.s
+    - 6 -> :mm:ss
+    - 5 -> :mm.m
+    - 3 -> :mm
+
+A timeValue is specified in UTC in the form YYYY-MM-DDTHH:MM:SS.S, in accord with ISO 8601.
 
 ### XML Elements
 
@@ -49,6 +107,28 @@ The INDI protocol defines several XML elements for different types of messages:
 - `<delProperty>`: Delete a property
 
 Each element has attributes that provide additional information about the message, such as the device name, property name, timestamp, and state.
+
+### INDI Commands
+
+INDI defines several commands for defining, setting, and updating properties. These commands are represented as XML elements in INDI messages.
+
+#### Commands from Device to Client
+
+- **getProperties**: Command to enable snooping messages from other devices.
+- **defTextVector**, **defNumberVector**, **defSwitchVector**, **defLightVector**, **defBLOBVector**: Define properties of various types.
+- **setTextVector**, **setNumberVector**, **setSwitchVector**, **setLightVector**, **setBLOBVector**: Send new values for properties.
+- **message**: Send a message associated with a device or entire system.
+- **delProperty**: Delete the given property, or entire device if no property is specified.
+
+#### Commands from Client to Device
+
+- **getProperties**: Command to ask Device to define all Properties.
+- **enableBLOB**: Command to control whether setBLOBs should be sent to this channel.
+- **newTextVector**, **newNumberVector**, **newSwitchVector**, **newBLOBVector**: Commands to inform Device of new target values for a Property.
+
+#### Vector Member Elements
+
+- **oneText**, **oneNumber**, **oneSwitch**, **oneLight**, **oneBLOB**: Elements describing a vector member value.
 
 ### Property Types
 

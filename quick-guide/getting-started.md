@@ -1,7 +1,7 @@
 ---
 title: Getting Started with INDI
 nav_order: 1
-parent: Guides
+parent: Quick Guide
 ---
 
 # Getting Started with INDI
@@ -32,7 +32,7 @@ The INDI system consists of three main components:
 
 The following diagram illustrates the typical INDI Client / Server / Driver / Device connectivity:
 
-![INDI Architecture Overview](images/indi_architecture_overview.png)
+![INDI Architecture Overview](../images/indi_architecture_overview.png)
 
 INDI server is the public network access point where one or more INDI Clients may contact one or more INDI Drivers. The indiserver launches each driver process and arranges for it to receive the INDI protocol from clients on its stdin and expects to find commands destined for clients on the driver's stdout. Anything arriving from a driver process' stderr is copied to indiserver's stderr. INDI server only provides convenient port, fork and data steering services. If desired, a client may run and connect to INDI Drivers directly.
 
@@ -40,7 +40,7 @@ INDI server is the public network access point where one or more INDI Clients ma
 
 The following diagram illustrates the communication flow between INDI components:
 
-![INDI Communication Flow](images/indi_communication_flow.png)
+![INDI Communication Flow](../images/indi_communication_flow.png)
 
 The communication flow is as follows:
 
@@ -335,7 +335,7 @@ http://localhost:8624/client
 
 You can also create your own INDI clients using the INDI client API. The API is available in several programming languages, including C++, Python, and JavaScript.
 
-For more information, see the [INDI Client Development](client-development.md) guide.
+For more information, see the [INDI Client Development](../clients/) guide.
 
 ## Basic Usage
 
