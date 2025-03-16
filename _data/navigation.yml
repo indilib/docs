@@ -1,0 +1,38 @@
+# Main navigation structure
+main:
+  - title: Home
+    url: /
+  - title: Introduction
+    url: /introduction/
+  - title: Quick Guide
+    url: /quick-guide/
+  - title: Protocol
+    url: /protocol/
+  - title: Server
+    url: /indiserver/
+  - title: Driver Development
+    url: /drivers/
+    children:
+      - title: Basics
+        url: /drivers/basics/
+      - title: INDI Tutorials
+        url: /drivers/tutorials/
+      - title: Advanced
+        url: /drivers/advanced/
+      - title: Connection Plugins
+        url: /drivers/connection-plugins/
+      - title: Standard Properties
+        url: /drivers/standard-properties/
+      - title: Driver Submission Guide
+        url: /drivers/driver-submission-guide/
+      - title: Best Practices
+        url: /drivers/best-practices/
+  - title: Device Interfaces
+    url: /interfaces/
+  - title: Client Development
+    url: /clients/
+  - title: Support
+    url: /support/
+    children:
+      - title: Troubleshooting
+        url: /support/troubleshooting/
