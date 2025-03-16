@@ -1,6 +1,6 @@
 ---
 title: Creating Custom INDI Drivers
-nav_order: 2
+nav_order: 9
 parent: Basics
 ---
 

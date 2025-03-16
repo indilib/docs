@@ -1,14 +1,17 @@
 ---
-sort: 2
+title: A Simple Driver
+nav_order: 1
+parent: Basics
 ---
-## A Simple Driver
+
+# A Simple Driver
 
 This tutorial assumes you have setup your project structure to match [project-setup](project-setup.md).
 
 Here is an example of a very simple driver. It doesn't do anything at all, but shows the bare minimum
 that must be written to get a driver to run.
 
-### indi_mycustomdriver.h
+## indi_mycustomdriver.h
 
 ```cpp
 #pragma once
@@ -26,7 +29,7 @@ public:
 };
 ```
 
-### indi_mycustomdriver.cpp
+## indi_mycustomdriver.cpp
 
 ```cpp
 #include "config.h"
@@ -75,11 +78,11 @@ If you want to see your driver in KStars, be sure to restart it after installing
 
 So let's add it to a profile and start our driver.
 
-![Ekos Profile Editor](../images/profile_editor.png)
+![Ekos Profile Editor](../../images/profile_editor.png)
 
 When we do, we can see it in the INDI Control Panel, with the `Main Control`, `General Info`, and `Options` tabs available.
 
-![INDI Control Panel](../images/driver.png)
+![INDI Control Panel](../../images/driver.png)
 
 ## Moving On
 

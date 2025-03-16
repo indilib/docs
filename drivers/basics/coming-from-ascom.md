@@ -1,6 +1,6 @@
 ---
 title: Coming from ASCOM
-nav_order: 6
+nav_order: 7
 parent: Basics
 ---
 
