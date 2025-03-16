@@ -1,7 +1,7 @@
 ---
 title: Quick Guide
-nav_order: 2
-has_children: true
+nav_order: 3
+has_children: false
 permalink: /quick-guide/
 ---
 
@@ -121,7 +121,7 @@ Here's a simple example of how INDI components work together to control a telesc
 
 This quick guide provides a basic overview of INDI. To learn more:
 
-- [Getting Started with INDI](getting-started.md): A comprehensive guide to installing and using INDI
+- [Getting Started with INDI](/getting-started/): A comprehensive guide to installing and using INDI
 - [Protocol Documentation](/protocol/): Detailed information about the INDI protocol
 - [Server Documentation](/indiserver/): More information about the INDI server
 - [Driver Development](/drivers/): Guide to developing INDI drivers

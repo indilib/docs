@@ -1,7 +1,8 @@
 ---
-title: Getting Started with INDI
-nav_order: 1
-parent: Quick Guide
+title: Getting Started
+nav_order: 2
+has_children: false
+permalink: /getting-started/
 ---
 
 # Getting Started with INDI

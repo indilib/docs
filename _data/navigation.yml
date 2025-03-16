@@ -4,6 +4,8 @@ main:
     url: /
   - title: Introduction
     url: /introduction/
+  - title: Getting Started
+    url: /getting-started/
   - title: Quick Guide
     url: /quick-guide/
   - title: Protocol
