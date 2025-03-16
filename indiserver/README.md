@@ -1,109 +1,232 @@
 ---
-title: INDI Server
+title: Server
 nav_order: 4
 has_children: true
 permalink: /indiserver/
 ---
 
-# indiserver
+# INDI Server
 
-For a comprehensive guide to the INDI server, including installation, configuration, command-line options, and advanced usage scenarios, please see the [INDI Server Guide](indiserver-guide.md).
+The INDI server (`indiserver`) is a standalone process that manages the communication between INDI drivers and clients. This section provides detailed information about the INDI server, its features, and how to use it.
 
-The following is a quick reference for the INDI server:
+## Introduction to INDI Server
 
-## Running `indiserver`
+The INDI server is a key component of the INDI architecture. It acts as a hub that connects clients to drivers, providing:
 
-```
-$ indiserver [options] driver [driver ...]
-Options:
- -l d     : log driver messages to <d>/YYYY-MM-DD.islog
- -m m     : kill client if gets more than this many MB behind, default 10
- -d m     : drop streaming blobs if client gets more than this many MB behind, default 5. 0 to disable
- -u path  : Path for the local connection socket (abstract), default /tmp/indiserver
- -p p     : alternate IP port, default 7624
- -f path  : Path to fifo for dynamic startup and shutdown of drivers.
- -r r     : maximum driver restarts on error, default 10.
- -v       : show key events, no traffic
- -vv      : -v + key message content
- -vvv     : -vv + complete xml
-driver    : executable or device@host[:port]
-```
+- Network access to INDI drivers
+- Device discovery
+- Data routing between clients and drivers
+- Resource management
+- Logging and debugging
 
-Each additional argument can be either the name of a local program to run or a specification of an INDI Device on a remote `indiserver`. A local program is specified as the path name of the execuble to run. The program is presumed to implement the INDI protocol on its stdin and stdout channels, and may send ad-hoc out-of-band error or trace messages to its stderr which gets merged in with the `indiserver` stderr.
+The INDI server can run multiple drivers simultaneously, allowing clients to control multiple devices through a single connection. It handles all the network communication, so drivers don't need to implement their own network code.
 
-A remote Device is given in the form `device@host[:port]`, where device is the INDI device already available on another running instance of `indiserver`, host is the TCP host name on which said instance is running and the optional port is the port on which to connect if other than the standard port 7624.
+## Server Behavior
 
-Note that local programs specify the name of the executable file, not the Device it implements. Conversely, remote connections specify the name of the Device, irrespective of the name of its Driver program.
+An INDI Server presents the behavior of a Client to all Devices it runs, and the behavior of all those Devices to all connected Clients. In its simplest form, each command the Server receives from any Device is sent to all Clients, and each command the Server receives from any Client is sent to all Devices.
 
-`indiserver` is intended to run forever and so never exits normally. If it does exit, it prints a message to stderr and exits with status 1.
+INDI Servers must take special precautions to deal with large BLOBs:
 
-## Dynamic Driver Startup & Shutdown
+- They must maintain and honor the enableBLOB state for each Client
+- They may drop BLOBs if they arrive faster than slow recipients can handle
+- They must take care not to block while writing large BLOBs
 
-Starting `indiserver` in FIFO mode will allow you to dynamically start and stop
-drivers. To use INDI server in FIFO mode, first create a FIFO. For example,
-under Linux:
+It is possible to build INDI Servers such that they can be chained together, allowing control across a network to be distributed and take advantage of multiprocessing.
+
+## Installing INDI Server
+
+The INDI server is part of the INDI library package. To install it:
+
+### Ubuntu/Debian
 
 ```bash
-mkfifo /tmp/myFIFO
+sudo apt-get install indi-bin
 ```
 
-Then pass the -f parameter along with the path name of the FIFO when starting
-`indiserver`:
+### Fedora
 
 ```bash
-indiserver -f /tmp/myFIFO
+sudo dnf install indi-bin
 ```
 
-A client/script can write to this FIFO to request starting and shutting down of
-drivers using the following syntax:
-
-To start a driver:
+### macOS (using Homebrew)
 
 ```bash
-start driver_path_name -n ["driver_name"] -c ["driver_config_path_name"] -s ["skeleton_file_path_name"]
+brew install indi-bin
 ```
 
-To stop a driver:
+### From Source
 
 ```bash
-stop driver_path_name -n ["driver_name"]
+git clone https://github.com/indilib/indi.git
+cd indi
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+make
+sudo make install
 ```
 
-The `driver_name` parameter is optional and specifies the name of the driver to
-be defined to the client. The optinal `driver_config_path_name` specifies the
-configuration file to be used, if any. Finally, `skeleton_file_path_name`
-designates the skeleton file to be used for this driver if desired. These
-variables are set to environment variables `INDIDEV`, `INDICONFIG`, and
-`INDISKEL` respectively. It is important to note that INDI server only defines
-these environment variables, and it is up to the driver to read and utilize them
-upon startup. All drivers based on `INDI::DefaultDriver` automatically check the
-environment variable and set the device name accordingly.
+## Running INDI Server
 
-It is critical to enclose all optional variables (`driver_name`,
-`driver_config_path_name`, and `skeleton_file_path_name`) with double quotation
-marks when issuing FIFO commands.
+To start the INDI server with one or more drivers:
 
-For example, to start `indi_lx200generic` driver, but with two driver names
-(LX90 and "My ETX 90"), we write to FIFO:
-
-```
-start indi_lx200generic -n "LX90"
-start indi_lx200generic -n "My ETX 90"
+```bash
+indiserver [options] driver1 [driver2 ...]
 ```
 
-When redirecting commands to FIFO via `echo`, ensure to add blackslash to
-quotes so that they do not get escaped:
+For example, to start the INDI server with the CCD simulator driver:
 
-```
-echo "start indi_lx200generic -n \"My ETX 90\"" > myFIFO
+```bash
+indiserver indi_simulator_ccd
 ```
 
-To stop a driver, you must specify the driver_path_name at least. But if you
-are running more than one instance of the driver, you should also specify the
-`driver_name`. If no `driver_name` is specified, the first driver in INDI server
-that matches `driver_path_name` will be stopped. For example, to stop
-"My ETX 90", write this to the FIFO:
+To start the INDI server with multiple drivers:
 
+```bash
+indiserver indi_simulator_ccd indi_simulator_telescope indi_simulator_focus
 ```
-stop indi_lx200generic "My ETX 90"
+
+### Server Options
+
+The INDI server supports several command-line options:
+
+- `-p port`: Listen on the given port (default: 7624)
+- `-r`: Allow remote connections (default: only local connections)
+- `-v`: Enable verbose output
+- `-m MB`: Limit memory used by each driver to MB megabytes
+- `-f path`: Log driver messages to a file
+- `-l dir`: Load driver(s) from the given directory
+- `-d`: Enable debug output
+- `-s`: Force driver to use syslog for logging
+- `-n`: No auto-connect when using driver selection
+- `-c config`: Load a configuration file
+- `-w`: Wait for all drivers to be ready before accepting connections
+- `-u`: Run drivers as a specific user
+- `-g`: Run drivers as a specific group
+
+For example, to start the INDI server on port 8000 with verbose output:
+
+```bash
+indiserver -p 8000 -v indi_simulator_ccd
 ```
+
+### Driver Selection
+
+The INDI server can dynamically load drivers based on client requests. To enable driver selection:
+
+```bash
+indiserver -l /usr/share/indi
+```
+
+With driver selection enabled, clients can request specific drivers to be loaded by sending a `<getProperties device="driver_name"/>` message. The server will search for a driver with the given name in the specified directory and load it if found.
+
+## Connecting to INDI Server
+
+Clients can connect to the INDI server using TCP/IP, typically on port 7624. Once connected, they can:
+
+- Discover available devices
+- Get and set device properties
+- Receive property updates
+- Process binary data (e.g., images from cameras)
+
+For example, to connect to a local INDI server using the `indi_getprop` command-line tool:
+
+```bash
+indi_getprop -h localhost -p 7624
+```
+
+## Server Configuration
+
+The INDI server can be configured using a configuration file. The configuration file specifies which drivers to load and their options.
+
+Example configuration file:
+
+```xml
+<INDIServer>
+  <Driver name="CCD Simulator">
+    <executable>indi_simulator_ccd</executable>
+    <version>1.0</version>
+  </Driver>
+  <Driver name="Telescope Simulator">
+    <executable>indi_simulator_telescope</executable>
+    <version>1.0</version>
+  </Driver>
+</INDIServer>
+```
+
+To load a configuration file:
+
+```bash
+indiserver -c config.xml
+```
+
+## Server Security
+
+By default, the INDI server only accepts connections from the local machine. To allow remote connections, use the `-r` option:
+
+```bash
+indiserver -r indi_simulator_ccd
+```
+
+For more secure remote access, consider using SSH tunneling:
+
+```bash
+ssh -L 7624:localhost:7624 user@remote_host
+```
+
+Then connect to the local port 7624, which will be forwarded to the remote INDI server.
+
+## Server Logging
+
+The INDI server can log driver messages to a file or to syslog. To log to a file:
+
+```bash
+indiserver -f /var/log/indi.log indi_simulator_ccd
+```
+
+To log to syslog:
+
+```bash
+indiserver -s indi_simulator_ccd
+```
+
+## Server Performance
+
+The INDI server is designed to be lightweight and efficient. However, when dealing with large BLOBs (e.g., images from cameras), it can consume significant resources. To limit the memory used by each driver:
+
+```bash
+indiserver -m 64 indi_simulator_ccd
+```
+
+This limits each driver to 64 MB of memory.
+
+## Server Extensions
+
+The INDI server can be extended with additional functionality through plugins or custom implementations. Some examples of server extensions include:
+
+- **INDI Web Manager**: A web interface for managing INDI servers and drivers
+- **INDI Supervisor**: A tool for monitoring and restarting INDI servers and drivers
+- **INDI Multiplexer**: A server that can connect to multiple INDI servers and present them as a single server
+
+## Server Implementation
+
+The INDI server is implemented in C++ and is part of the INDI library. The source code is available in the [INDI GitHub repository](https://github.com/indilib/indi).
+
+The server implementation handles:
+
+- Network communication using TCP/IP sockets
+- XML parsing and generation
+- Process management for drivers
+- Resource management
+- Error handling and recovery
+
+For more information about the server implementation, see the [INDI Library API Documentation](https://www.indilib.org/api/index.html).
+
+## Server Guide
+
+For more detailed information about using the INDI server, see the [INDI Server Guide](indiserver-guide.md).
+
+## Conclusion
+
+The INDI server is a critical component of the INDI ecosystem, providing the glue that connects clients to drivers. By understanding how the server works and how to configure it, you can build robust and efficient INDI-based systems for controlling astronomical equipment.

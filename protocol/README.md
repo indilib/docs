@@ -1,92 +1,157 @@
 ---
 title: Protocol
-nav_order: 6
+nav_order: 3
 has_children: true
 permalink: /protocol/
 ---
 
 # INDI Protocol
 
-## Overview
+The INDI (Instrument-Neutral Distributed Interface) protocol is an XML-based protocol designed for controlling astronomical devices. This section provides detailed information about the protocol, its structure, and how it works.
 
-The reference documentation for the INDI protocol can be found [here](INDI.pdf).
+## Introduction to the INDI Protocol
 
-INDI is a simple XML-like communications protocol described for interactive and
-automated remote control of diverse instrumentation. INDI is small, easy to
-parse, and stateless. In the INDI paradigm each Device poses all command and
-status functions in terms of setting and getting Properties. Each Property is a
-vector of one or more members. Each property has a current value vector; a
-target value vector that provides information about how it should be sequenced
-with respect to other Properties to accomplish one coordinates unit of
-observation; and provides hints as to how it might be displayed for interactive
-manipulation in a GUI.
+The INDI protocol is designed to provide a standard way for astronomical software to communicate with astronomical hardware. It is:
 
-The main key concept in INDI is that devices have the ability to describe
-themselves. This is accomplished by using XML to describe a generic hierarchy
-that can represent both canonical and non-canonical devices. All devices may
-contain one or more properties. A property in the INDI paradigm describes a
-specific function of the driver. Any property may contain one or more elements.
+- **XML-based**: All messages are formatted as XML elements
+- **Stateful**: The protocol maintains state information about devices and their properties
+- **Asynchronous**: Commands and responses are not necessarily paired or immediate
+- **Extensible**: The protocol can be extended to support new types of devices and functionality
 
-There are five types of INDI properties:
+The protocol defines a set of messages that clients and drivers can exchange to discover and control devices. These messages are grouped into several categories:
 
-- Text property: Property to transfer simple text information in ISO-8859-1. The text is not encoded or encrypted on transfer. If the text includes elements that can break XML syntax, a BLOB property should be used to make the transfer.
-- Number property: Property to transfer numeric information with configurable minimum, maximum, and step values. The supported number formats are decimal and sexigesmal. The property includes a GUI hint element in printf style format to enable clients to properly display numeric properties.
-- Switch property: Property to hold a group of options or selections (Represented in GUI by buttons and check boxes).
-- Light property: Property to hold a group of status indicators (Represented in GUI by colored LEDs).
-- BLOB property: BLOB is a Binary Large OBject used to transfer binary data to and from drivers.
+- **Device and property discovery**: Messages for discovering devices and their properties
+- **Property definition**: Messages for defining properties and their characteristics
+- **Property update**: Messages for updating property values
+- **Property state**: Messages for indicating the state of properties
+- **Binary data**: Messages for transferring binary data (e.g., images)
 
-For example, all INDI devices share the CONNECTION standard switch property. The
-CONNECTION property has two elements: CONNECT and DISCONNECT switches. GUI
-clients parse the generic XML description of properties and builds a GUI
-representation suitable for direct human interaction.
+## Protocol Version History
 
-INDI does not pose any policies on how clients represent data, but some
-properties include hints to clients as to how they should be represented.
-Possible clients include simple loggers, GUI clients, and complex automated
-scripts.
+The INDI protocol has evolved over time to support new features and improve existing ones. Here's a brief history of the protocol versions:
 
-## Architecture
+- **1.7**: Added getProperties from Devices to add snooping functionality, and added message attribute to getProperties from Clients.
+- **1.6**: Clarification regarding when all members of a vector must be sent, even members that changed.
+- **1.5**: Made the size attribute of the oneBLOB element required.
+- **1.3**: Added BLOB elements for transferring binary data.
+- **1.0**: Initial release of the INDI protocol.
 
-INDI is implemented as a client/server architecture. The INDI project provides a
-reference implementation of an INDI server that can start one or more drivers,
-connect to other running INDI servers, and accept connections from one or more
-clients. Again, since INDI is just XML over TCP, you are free to implement your
-own client or server in any language you wish.
+## Protocol Structure
 
-This looks something like this:
+### XML Elements
 
+The INDI protocol defines several XML elements for different types of messages:
+
+- `<defTextVector>`, `<defNumberVector>`, `<defSwitchVector>`, `<defLightVector>`, `<defBLOBVector>`: Define property vectors
+- `<setTextVector>`, `<setNumberVector>`, `<setSwitchVector>`, `<setLightVector>`, `<setBLOBVector>`: Set property values
+- `<newTextVector>`, `<newNumberVector>`, `<newSwitchVector>`, `<newLightVector>`, `<newBLOBVector>`: Report new property values
+- `<message>`: Send a message to the client
+- `<delProperty>`: Delete a property
+
+Each element has attributes that provide additional information about the message, such as the device name, property name, timestamp, and state.
+
+### Property Types
+
+The INDI protocol defines five types of properties:
+
+- **Text**: String values
+- **Number**: Numeric values with optional format, minimum, maximum, and step
+- **Switch**: Boolean or enumerated values with different rule types (OneOfMany, AtMostOne, AnyOfMany)
+- **Light**: Read-only status indicators with different states (Idle, OK, Busy, Alert)
+- **BLOB**: Binary data with format information
+
+Each property type has its own set of attributes and elements for defining and updating values.
+
+### Message Flow
+
+The typical message flow in the INDI protocol follows this pattern:
+
+1. **Device Discovery**: Clients send `<getProperties>` to discover devices and their properties
+2. **Property Definition**: Drivers send `<defXXXVector>` messages to define properties
+3. **Property Update**: Clients send `<setXXXVector>` messages to update property values
+4. **Property State**: Drivers send `<newXXXVector>` messages to report new property values and states
+
+This flow is asynchronous, meaning that drivers can send property updates at any time, not just in response to client requests.
+
+## Standard Properties
+
+The INDI protocol defines a set of standard properties that all drivers should implement if applicable. These properties provide a common interface for clients to interact with devices, regardless of the specific hardware.
+
+Some examples of standard properties include:
+
+- `CONNECTION`: Connect/disconnect from the device
+- `EQUATORIAL_EOD_COORD`: Telescope equatorial coordinates
+- `CCD_EXPOSURE`: Camera exposure time
+- `FILTER_SLOT`: Filter wheel slot number
+
+For a complete list of standard properties, see the [Standard Properties](../drivers/standard-properties.md) documentation.
+
+## Protocol Examples
+
+Here are some examples of INDI protocol messages:
+
+### Device Discovery
+
+```xml
+<getProperties version="1.7"/>
 ```
-INDI Client 1 --|                 |-- INDI Driver A -- Device X
-                |                 |
-INDI Client 2 --|                 |-- INDI Driver B -- Device Y
-                |-- indiserver -- |               |
-...             |                 |               | -- Device Z
-                |                 |
-INDI Client n --|                 |-- INDI Driver C -- Device T
 
-Client       INET     Server      UNIX    Driver      Hardware
-Processes   Sockets   Process     Pipes   Processes   Devices
+### Property Definition
+
+```xml
+<defNumberVector device="CCD Simulator" name="CCD_EXPOSURE" label="Expose" group="Main Control" state="Idle" perm="rw" timeout="60" timestamp="2023-01-01T12:00:00">
+    <defNumber name="CCD_EXPOSURE_VALUE" label="Duration (s)" format="%5.2f" min="0" max="36000" step="0.01">
+        1.0
+    </defNumber>
+</defNumberVector>
 ```
 
-## Typical INDI Communication
+### Property Update
 
-```mermaid
-sequenceDiagram
-    %% https://mermaid-js.github.io/mermaid/#/sequenceDiagram
-
-    Client->>indiserver: connect on port 7624
-    Client->>indiserver: send `getProperties`
-    indiserver->>driver: call `ISGetProperties`
-
-    loop each property
-        driver->>indiserver: call `defineProperty`
-        indiserver->>Client: send `def*` xml message
-    end
-
-    Client->>indiserver: send `newSwitch`
-    indiserver->>driver: call `ISNewSwitch`
-    activate driver
-    Note right of driver: Respond to the new button click
-    driver->>indiserver: call `IDSetSwitch`
-    indiserver->>Client: send `setSwitch`
+```xml
+<setNumberVector device="CCD Simulator" name="CCD_EXPOSURE" state="Busy" timeout="60" timestamp="2023-01-01T12:01:00">
+    <oneNumber name="CCD_EXPOSURE_VALUE">
+        5.0
+    </oneNumber>
+</setNumberVector>
 ```
+
+### Property State
+
+```xml
+<newNumberVector device="CCD Simulator" name="CCD_EXPOSURE" state="Busy" timeout="60" timestamp="2023-01-01T12:01:00">
+    <oneNumber name="CCD_EXPOSURE_VALUE">
+        5.0
+    </oneNumber>
+</newNumberVector>
+```
+
+## Protocol Documentation
+
+For more detailed information about the INDI protocol, refer to the following resources:
+
+- [INDI Protocol White Paper](INDI.pdf): The original white paper describing the INDI protocol
+- [INDI Protocol Specification](https://www.indilib.org/develop/developer-manual/104-indi-protocol.html): The official INDI protocol specification
+- [INDI Library API Documentation](https://www.indilib.org/api/index.html): Documentation for the INDI library API
+
+## Protocol Implementation
+
+The INDI protocol is implemented in the INDI library, which provides a C/C++ API for developing INDI drivers and clients. The library handles the XML parsing and generation, as well as the network communication between clients and drivers.
+
+For information on how to use the INDI library to implement drivers, see the [Driver Development](../drivers/) documentation.
+
+For information on how to use the INDI library to implement clients, see the [Client Development](../clients/) documentation.
+
+## Protocol Extensions
+
+The INDI protocol can be extended to support new types of devices and functionality. Extensions can be implemented by:
+
+- Adding new standard properties
+- Adding new property types
+- Adding new message types
+
+Extensions should be backward compatible with existing clients and drivers, and should follow the INDI protocol design principles.
+
+## Conclusion
+
+The INDI protocol provides a flexible and extensible way for astronomical software to communicate with astronomical hardware. By understanding the protocol structure and message flow, you can develop INDI drivers and clients that work seamlessly with the INDI ecosystem.
