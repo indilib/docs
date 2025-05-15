@@ -35,6 +35,8 @@ main:
     url: /clients/
   - title: Scripting
     url: /scripting/
+  - title: PyIndi Client
+    url: /pyindi-client/
   - title: Support
     url: /support/
     children:
