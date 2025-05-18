@@ -202,30 +202,36 @@ The main interface to the INDI server.
 
 ### Property Classes
 
-#### INumber, INumberVectorProperty
+#### INDI::PropertyNumber
 
 Control numerical properties such as focus position or CCD temperature.
 
-#### ISwitch, ISwitchVectorProperty
+#### INDI::PropertySwitch
 
 Manage toggle and selection properties (e.g., turning tracking on/off).
 
-#### IText, ITextVectorProperty
+#### INDI::PropertyText
 
 Send or receive text-based commands or data.
 
-#### IBLOB, IBLOBVectorProperty
+#### INDI::PropertyBLOB
 
 Used for transmitting image or binary data from devices.
 
 ## Advanced Examples
 
 ### Setting a Property
+You can set the value directly if you know the element (widget) index or try to find it first, then set its value
 
 ```python
 ccd = client.getDevice("CCD Simulator")
 prop = ccd.getNumber("CCD_EXPOSURE")
-prop["CCD_EXPOSURE_VALUE"].value = 5.0
+# Set by index
+prop[0].setValue(-5)
+# OR Find Widget and Set value
+widget = prop.findWidgetByName("CCD_TEMPERATURE_VALUE")
+widget.setValue(-5)
+# After adjusting property value, send back to client
 client.sendNewNumber(prop)
 ```
 
@@ -240,8 +246,16 @@ client.setBLOBMode(PyIndi.B_ALSO, "CCD Simulator", None)
 ```python
 telescope = client.getDevice("Telescope Simulator")
 switch_vector = telescope.getSwitch("TELESCOPE_TRACK_STATE")
-switch_vector["TRACK_ON"].s = PyIndi.ISS_ON
-switch_vector["TRACK_OFF"].s = PyIndi.ISS_OFF
+# By index
+switch_vector[0].setState(PyIndi.ISS_ON)
+switch_vector[1].setState(PyIndi.ISS_OFF)
+# OR Find Widget and Set value
+widget = prop.findWidgetByName("TRACK_ON")
+if widget:
+    widget.setState(PyIndi.ISS_ON)
+widget = prop.findWidgetByName("TRACK_OFF")
+if widget:
+    widget.setState(PyIndi.ISS_OFF)
 client.sendNewSwitch(switch_vector)
 ```
 
@@ -250,8 +264,8 @@ client.sendNewSwitch(switch_vector)
 ```python
 telescope = client.getDevice("Telescope Simulator")
 coords = telescope.getNumber("EQUATORIAL_EOD_COORD")
-coords["RA"].value = 5.5      # RA in hours
-coords["DEC"].value = -10.0   # DEC in degrees
+coords[0].setValue(5.5)      # RA in hours
+coords[1].setValue(-10.0)   # DEC in degrees
 client.sendNewNumber(coords)
 ```
 
@@ -272,7 +286,7 @@ client.setBLOBMode(PyIndi.B_ALSO, "CCD Simulator", None)
 
 ccd = client.getDevice("CCD Simulator")
 ccd_exposure = ccd.getNumber("CCD_EXPOSURE")
-ccd_exposure["CCD_EXPOSURE_VALUE"].value = 2.0
+ccd_exposure[0].setValue(2.0)
 client.sendNewNumber(ccd_exposure)
 ```
 
@@ -297,8 +311,8 @@ client.setBLOBMode(PyIndi.B_ALSO, "CCD Simulator", None)
 # Slew telescope
 telescope = client.getDevice("Telescope Simulator")
 coords = telescope.getNumber("EQUATORIAL_EOD_COORD")
-coords["RA"].value = 6.0
-coords["DEC"].value = -5.0
+coords[0].value = 6.0
+coords[1].value = -5.0
 client.sendNewNumber(coords)
 
 # Wait for settling
@@ -307,7 +321,7 @@ time.sleep(10)
 # Capture image
 ccd = client.getDevice("CCD Simulator")
 exposure = ccd.getNumber("CCD_EXPOSURE")
-exposure["CCD_EXPOSURE_VALUE"].value = 3.0
+exposure[0].value = 3.0
 client.sendNewNumber(exposure)
 ```
 
