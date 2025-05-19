@@ -37,6 +37,9 @@ main:
     url: /scripting/
   - title: PyIndi Client
     url: /pyindi-client/
+    children:
+      - title: Migration
+        url: /pyindi-client/migration/
   - title: Support
     url: /support/
     children:
