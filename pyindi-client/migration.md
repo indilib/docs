@@ -7,7 +7,7 @@ permalink: /pyindi-client/migration/
 
 # Migration to INDI Core 2.0.0
 
-This documentation is only for those using an old version of INDI and now trying to migrate to the INDI Core 2.0.0
+If you used PyINDI prior to v1.9.0, you need to upgrade your project to compile with INDI 1.9.0+ or later architecture that utilizes INDI new properties.
 
 ## For all property
 
