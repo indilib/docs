@@ -130,7 +130,7 @@ INDI Library provides
 
 ### Linux/Mac
 
-- [INDI Downloads](https://indilib.org/get-indi.html)
+- [INDI Downloads](https://indilib.org/download.html)
 - [Nou Scripts](https://gitea.nouspiro.space/nou/astro-soft-build)
 
 ### Raspberry Pi

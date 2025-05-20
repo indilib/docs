@@ -7,4 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: restqa/404-links@v1.0.1
+      - name: Check links
+        uses: lycheeverse/lychee-action@v1.8.0
+        with:
+          args: --verbose --exclude-mail --timeout 20 --exclude "sourceforge.net" --exclude "gnu.org" "**/*.md"

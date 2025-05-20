@@ -262,7 +262,7 @@ To submit your documentation to the INDI Device Portal:
 
 1. Prepare your documentation in Markdown format
 2. Gather all necessary screenshots
-3. Submit your documentation through the [INDI website](https://indilib.org/support/contact-us.html) or as part of your GitHub pull request
+3. Submit your documentation through the [INDI website](https://indilib.org/forum.html) or as part of your GitHub pull request
 
 ## Example: Complete Driver Documentation
 
