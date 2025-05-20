@@ -197,6 +197,7 @@ The main interface to the INDI server.
 
 * `newProperty(property)`: Triggered when a new property is defined.
 * `removeProperty(property)`: Triggered when a property is removed.
+* `updateProperty(property)`: Triggered when a property is updated.
 
 ### Property Classes
 
