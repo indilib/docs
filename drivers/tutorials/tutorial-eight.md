@@ -74,4 +74,4 @@ To run this tutorial:
 
 This tutorial completes our series on INDI driver development. We've covered a wide range of topics, from basic device drivers to specialized interfaces and inter-driver communication. With these examples, you should have a solid foundation for developing your own INDI drivers for various astronomical devices.
 
-For more information and advanced topics, please refer to the [INDI Library Documentation](https://indilib.org/developers/documentation.html) and the [INDI GitHub Repository](https://github.com/indilib/indi).
+For more information and advanced topics, please refer to the [INDI Library Documentation](https://indilib.org/develop/developer-manual.html) and the [INDI GitHub Repository](https://github.com/indilib/indi).

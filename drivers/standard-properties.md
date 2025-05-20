@@ -55,7 +55,7 @@ The following tables describe standard properties pertaining to generic devices 
 
 ## Telescope Properties
 
-Telescope standard properties define critical properties for the operation and control of the mount. In addition to the properties below, all properties in [INDI Alignment Subsystem](http://www.indilib.org/api/md_libs_indibase_alignment_alignment_white_paper.html) are considered standard properties as well and must be reserved in all implementations.
+Telescope standard properties define critical properties for the operation and control of the mount. In addition to the properties below, all properties in [INDI Alignment Subsystem](https://www.indilib.org/api/md_libs_alignment_alignment_white_paper.html) are considered standard properties as well and must be reserved in all implementations.
 
 | Name                     | Type   | Values                       | Description                                                                                    |
 | ------------------------ | ------ | ---------------------------- | ---------------------------------------------------------------------------------------------- |

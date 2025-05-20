@@ -48,7 +48,6 @@ First, some helpful links:
   - [INDI 3rd Party Repo](https://github.com/indilib/indi-3rdparty)
   - [libindi API Docs](https://www.indilib.org/api/index.html)
   - [INDI Stable Builds](https://launchpad.net/~mutlaqja/+archive/ubuntu/ppa)
-  - [INDI Nightly Builds](https://launchpad.net/~mutlaqja/+archive/ubuntu/indinightly)
 - Build Tools
   - [CMake](https://cmake.org/cmake/help/latest/)
 - Helpful Libraries
@@ -61,7 +60,7 @@ First, some helpful links:
   - [json](https://github.com/nlohmann/json): Write & parse JSON in INDI drivers (e.g. [Primalucelab Devices](https://github.com/indilib/indi/blob/master/drivers/focuser/primalucacommandset.cpp))
   - [httplib](https://github.com/yhirose/cpp-httplib): Create http(s) servers and clients. Make GET/POST/PUT calls for RESTful services (e.g. [Planewave Mount](https://github.com/indilib/indi/blob/master/drivers/telescope/planewave_mount.cpp)).
   - [inifile-cpp](https://github.com/Rookfighter/inifile-cpp): a simple and easy to use single header-only ini file encoder and decoder for C++ (e.g. [Planewave Mount](https://github.com/indilib/indi/blob/master/drivers/telescope/planewave_mount.cpp)).
-  - [nanomodbus](https://github.com/debevv/nanoMODBUS): A compact MODBUS RTU/TCP C library for embedded controllers (e.g. [Waveshare Relay](https://github.com/indilib/indi/blob/master/drivers/auxiliary/waveshare_modbus_relay.h)).
+  - [nanomodbus](https://github.com/debevv/nanoMODBUS): A compact MODBUS RTU/TCP C library for embedded controllers (e.g. [Waveshare Relay](https://github.com/indilib/indi/blob/master/drivers/io/waveshare_modbus_relay.h)).
 
 ## Introduction
 
@@ -130,7 +129,7 @@ INDI Library provides
 
 ### Linux/Mac
 
-- [INDI Downloads](https://indilib.org/get-indi.html)
+- [INDI Downloads](https://indilib.org/download.html)
 - [Nou Scripts](https://gitea.nouspiro.space/nou/astro-soft-build)
 
 ### Raspberry Pi
