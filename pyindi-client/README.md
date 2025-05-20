@@ -233,6 +233,67 @@ widget.setValue(-5)
 client.sendNewNumber(prop)
 ```
 
+### NewProperty and UpdateProperty
+You may want to define how your client reacts when the INDI server sends notifications about new or updated properties.
+
+```python
+import PyIndi
+import logging
+
+class MyIndiClient(PyIndi.BaseClient):
+    def __init__(self):
+        super(MyIndiClient, self).__init__()
+        self.logger = logging.getLogger('MyIndiClient')
+
+    def newDevice(self, d):
+        self.logger.info(f"New device connected: {d.getDeviceName()}")
+
+    def newProperty(self, p):
+        self.logger.info(f"New property '{p.getName()}' for device '{p.getDeviceName()}' of type '{p.getTypeAsString()}'")
+        # You might want to store this property object or process its initial state here
+        if p.getName() == "CCD_TEMPERATURE":
+            number_property = PyIndi.PropertyNumber(p)
+            for element in number_property:
+                self.logger.info(f"  {element.name} ({element.label}) = {element.value}")
+        elif p.getName() == "CCD_EXPOSURE":
+            number_property = PyIndi.PropertyNumber(p)
+            for element in number_property:
+                self.logger.info(f"  {element.name} ({element.label}) = {element.value}")
+                # You could set an initial exposure time here, for example:
+                # element.value = 10.0
+                # self.sendNewNumber(number_property)
+
+    def updateProperty(self, p):
+        self.logger.info(f"Property '{p.getName()}' for device '{p.getDeviceName()}' updated")
+        if p.getName() == "CCD_TEMPERATURE":
+            number_property = PyIndi.PropertyNumber(p)
+            for element in number_property:
+                self.logger.info(f"  {element.name} ({element.label}) = {element.value}")
+                # You could react to temperature changes here
+        elif p.getName() == "CCD_EXPOSURE":
+            number_property = PyIndi.PropertyNumber(p)
+            for element in number_property:
+                self.logger.info(f"  {element.name} ({element.label}) = {element.value}")
+                # You might check if the exposure has finished here
+
+    # ... other necessary methods like newMessage, serverConnected, serverDisconnected, etc.
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    indi_client = MyIndiClient()
+    indi_client.setServer("localhost", 7624)  # Replace with your INDI server address and port
+
+    if not indi_client.connectServer():
+        print("Could not connect to INDI server!")
+        exit(1)
+
+    try:
+        while True:
+            pass  # Keep the client running to receive events
+    except KeyboardInterrupt:
+        indi_client.disconnectServer()
+```
+
 ### Enabling BLOB Mode
 
 ```python
