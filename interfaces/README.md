@@ -19,16 +19,16 @@ This directory contains documentation for INDI device interfaces. All of these a
 - [Weather Interface](weather-interface.md) - Documentation for implementing the weather interface
 - [Filter Wheel Interface](filter-wheel-interface.md) - Documentation for implementing the filter wheel interface
 - [Lightbox Interface](lightbox-interface.md) - Documentation for implementing the lightbox interface
+- [Input Interface](indiinputinterface.md) - Documentation for implementing the input interface
+- [Output Interface](indioutputinterface.md) - Documentation for implementing the output interface
+- [Rotator Interface](indirotatorinterface.md) - Documentation for implementing the rotator interface
+- [Dust Cap Interface](indidustcapinterface.md) - Documentation for implementing the dust cap interface
+- [Dome Interface](indidomeinterface.md) - Documentation for implementing the dome interface
 
 ## Other Core Interfaces
 
 The following core interfaces are also part of INDI. Documentation for these interfaces will be added:
 
 - GPS Interface
-- Input Interface
-- Output Interface
-- Rotator Interface
-- Dome Interface
 - Detector Interface
-- Dustcap Interface
 - AUX Interface
