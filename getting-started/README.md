@@ -278,6 +278,10 @@ By default, the INDI Web Manager listens on port 8624. You can access it by open
 http://localhost:8624
 ```
 
+## INDI Development VirtualBox Machine
+
+For detailed information on the INDI Development VirtualBox Machine, including configuration, download instructions, and a tutorial, please refer to the [INDI Development VM](/getting-started/indi-development-vm/) page.
+
 ## INDI Clients
 
 INDI clients are applications that connect to the INDI server, discover devices, and control device properties. There are several INDI clients available:
@@ -604,31 +608,3 @@ make test
 ## Conclusion
 
 INDI provides a powerful and flexible way to control astronomical equipment. By understanding the basics of INDI, how to install and set up the INDI system, and how to use INDI to control your astronomical devices, you can streamline your astronomical observations and focus on the science and beauty of the night sky.
-
-## INDI Development VirtualBox Machine
-
-For users who prefer a pre-configured environment or are running Windows, MacOS, or Linux and wish to avoid installing dependencies, an INDI Development VirtualBox machine is available. This VM provides an immediate start to INDI driver development without the need for extensive setup.
-
-It is assumed that you are already familiar with INDI architecture and how it works.
-
-### Virtual Machine Configuration
-
-Upon importing the VirtualBox image, you will need to configure the network adapter. By default, the VM network is set to **Bridged Adapter** mode, requiring you to select a specific network adapter from your host machine. You can also switch the network mode to **NAT** if desired, depending on your network setup and requirements.
-
-The VM is pre-configured to utilize **8GB of RAM** from the host machine and is set to use up to **16 CPU cores** for optimal performance during INDI driver development. You can adjust these settings in VirtualBox Manager after importing the VM to match your host machine's resources and your specific development needs.
-
-The default username and password for the Virtual Machine is `indi`.
-
-### Download the Virtual Machine Image
-
-The 14GB VirtualBox image is available for download via Google Drive. To prevent abuse, access is granted upon request. When requesting the image from Google Drive, specify why you want to use the Virtual Machine for INDI driver development, and we will grant you access.
-
-[INDI Development VM https://drive.google.com/file/d/13YbfyRZrUSArsJEasKeUzk-atR7ovn-6/view?usp=sharing]
-
-### Virtual Machine Tutorial
-
-A YouTube tutorial demonstrating how to use the Virtual Machine for INDI driver development is available here:
-
-[Youtube Tutorial: https://youtu.be/RWlWkAJWHgY]
-
-For more information, refer to the [INDI Library Documentation](https://www.indilib.org/api/index.html) and the [INDI Protocol Specification](https://www.indilib.org/develop/developer-manual/104-indi-protocol.html).
