@@ -12,6 +12,8 @@ main:
     url: /protocol/
   - title: Server
     url: /indiserver/
+  - title: Development VM
+    url: /getting-started/indi-development-vm/
   - title: Driver Development
     url: /drivers/
     children:
