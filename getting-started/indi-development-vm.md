@@ -31,5 +31,5 @@ The 14GB VirtualBox image is available for download via Google Drive. To prevent
 
 Learn how to get started with the VM and setup your first project.
 
-[![Watch the video](https://img.youtube.com/vi/RWlWkAJWHgY/maxresdefault.jpg)](https://youtu.be/RWlWkAJWHgY)
+[![Watch the video](https://img.youtube.com/vi/XGMRDobUUmU/maxresdefault.jpg)](https://youtu.be/XGMRDobUUmU)
 
