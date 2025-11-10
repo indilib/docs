@@ -23,8 +23,29 @@ main:
         url: /drivers/tutorials/
       - title: Advanced
         url: /drivers/advanced/
-      - title: Connection Plugins
-        url: /drivers/connection-plugins/
+      - title: Hardware Communications
+        url: /drivers/communications/
+        children:
+          - title: Overview
+            url: /drivers/communications/
+          - title: Connection Plugins
+            url: /drivers/communications/connection-plugins/
+          - title: Serial
+            url: /drivers/communications/serial/
+          - title: TCP
+            url: /drivers/communications/tcp/
+          - title: UDP
+            url: /drivers/communications/udp/
+          - title: I2C
+            url: /drivers/communications/i2c/
+          - title: USB
+            url: /drivers/communications/usb/
+          - title: HID
+            url: /drivers/communications/hid/
+          - title: GPIO
+            url: /drivers/communications/gpio/
+          - title: System Setup
+            url: /drivers/communications/system-setup/
       - title: Standard Properties
         url: /drivers/standard-properties/
       - title: Driver Submission Guide
