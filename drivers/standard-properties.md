@@ -424,6 +424,7 @@ Upload Mode affects Fast Exposure behavior depending on the mode selected. For L
 | WEATHER_OVERRIDE   | Switch | OVERRIDE | Override weather status                |
 | WEATHER_PARAMETERS | Number |          | Weather parameters (varies by device)  |
 | WEATHER_STATUS     | Light  |          | Weather status for critical parameters |
+| SAFETY_STATUS      | Light  | SAFETY   | Overall safety status for observatory operations. IPS_OK=Safe, IPS_BUSY=Warning, IPS_ALERT=Unsafe, IPS_IDLE=Unknown |
 
 ## Rotator Interface Properties
 
