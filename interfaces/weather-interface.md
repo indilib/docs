@@ -74,6 +74,50 @@ The interface supports two models for evaluating parameters:
 
 The flipped model is useful for parameters where extreme values indicate good conditions (e.g., cloud sensors where very low/high readings indicate clear skies).
 
+### Common Weather Parameters
+
+When implementing a weather driver, you can use these standardized parameter names for consistency across INDI weather drivers. These parameters are commonly used in weather drivers like OpenWeatherMap:
+
+| Parameter Name | Label | Description | Typical Range | Units |
+|----------------|-------|-------------|---------------|-------|
+| `WEATHER_TEMPERATURE` | Temperature | Ambient temperature | -10 to 30 (example) | °C |
+| `WEATHER_PRESSURE` | Pressure | Atmospheric pressure | 900 to 1100 | hPa |
+| `WEATHER_HUMIDITY` | Humidity | Relative humidity | 0 to 100 | % |
+| `WEATHER_WIND_SPEED` | Wind Speed | Wind speed | 0 to 20 (example) | m/s or km/h |
+| `WEATHER_WIND_GUST` | Wind Gust | Maximum wind gust speed | 0 to 30 (example) | m/s or km/h |
+| `WEATHER_RAIN_HOUR` | Rain Precipitation | Rainfall in last hour | 0+ | mm |
+| `WEATHER_SNOW_HOUR` | Snow Precipitation | Snowfall in last hour | 0+ | mm |
+| `WEATHER_CLOUD_COVER` | Cloud Cover | Cloud coverage percentage | 0 to 100 | % |
+| `WEATHER_FORECAST` | Weather Forecast | Numeric weather forecast code | 0 to 3 | code |
+| `WEATHER_CODE` | Status Code | Weather condition code | varies | code |
+| `WEATHER_DEW_POINT` | Dew Point | Dew point temperature | -20 to 30 | °C |
+| `WEATHER_SKY_QUALITY` | Sky Quality | Sky brightness/quality | varies | mag/arcsec² |
+| `WEATHER_SKY_TEMPERATURE` | Sky Temperature | Infrared sky temperature | -50 to 0 | °C |
+| `WEATHER_VISIBILITY` | Visibility | Atmospheric visibility | 0 to 10000+ | m |
+
+#### Weather Forecast Codes
+
+The `WEATHER_FORECAST` parameter typically uses these numeric codes:
+
+- `0` - Clear/Good weather
+- `1` - Cloudy/Moderate conditions
+- `2` - Poor conditions (rain, storm, etc.)
+- `3` - Severe weather warning
+
+#### Commonly Critical Parameters
+
+These parameters are often set as critical parameters because they directly affect observatory safety:
+
+- `WEATHER_TEMPERATURE` - Extreme temperatures can damage equipment
+- `WEATHER_WIND_SPEED` - High winds are dangerous for telescopes and domes
+- `WEATHER_RAIN_HOUR` - Precipitation requires immediate protection
+- `WEATHER_SNOW_HOUR` - Snow accumulation requires immediate protection
+- `WEATHER_FORECAST` - Overall weather condition indicator
+- `WEATHER_CLOUD_COVER` - Heavy clouds may require closing operations
+- `WEATHER_HUMIDITY` - High humidity can cause condensation
+
+**Note:** The actual parameters, ranges, and critical parameters you choose will depend on your specific weather monitoring hardware and local conditions. These are guidelines based on common implementations.
+
 ### Key Methods
 
 A driver implementing the `INDI::WeatherInterface` must override and implement the following virtual methods to provide weather data:
