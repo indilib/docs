@@ -7,7 +7,72 @@ permalink: /scripting/
 
 # INDI Scripting Tools
 
-INDI provides three command line tools that can be used to write complex scripts for setting, retrieving, and controlling the behavior of INDI devices. These tools provide the programmer with a software equivalent of a closed loop control system where the behavior of INDI devices can be watched and corrected when desired. Furthermore, you can evaluate arithmetic expressions of INDI properties which would permit the formulation of very complex and nested requirements lists.
+INDI provides command line tools that can be used to write complex scripts for setting, retrieving, and controlling the behavior of INDI devices. These tools provide the programmer with a software equivalent of a closed loop control system where the behavior of INDI devices can be watched and corrected when desired. Furthermore, you can evaluate arithmetic expressions of INDI properties which would permit the formulation of very complex and nested requirements lists.
+
+## indi_getdevice
+
+**Available from:** INDI 2.1.8
+
+### Purpose
+
+List all devices available from an INDI server. This is the simplest tool and is useful for discovering what devices are currently connected to the server before querying their properties.
+
+### Usage
+
+```bash
+$ indi_getdevice [options] [device_pattern]
+```
+
+The optional `device_pattern` may contain "\*" to match all devices (beware shell metacharacters). Lists all devices if no pattern specified.
+
+### Output Format
+
+Output is one device name per line.
+
+### Options
+
+```
+-d f  : use file descriptor f already open to server
+-h h  : alternate host, default is localhost
+-p p  : alternate port, default is 7624
+-t t  : max time to wait, default is 2 secs
+-v    : verbose (cumulative)
+```
+
+### Exit Status
+
+```
+0: found at least one device
+1: no devices found
+2: real trouble, try repeating with -v
+```
+
+### Examples
+
+1. List all devices from the default indiserver:
+
+   ```bash
+   indi_getdevice
+   ```
+
+2. List only CCD devices:
+
+   ```bash
+   indi_getdevice "CCD*"
+   ```
+
+3. List all devices from a remote server with a longer timeout:
+
+   ```bash
+   indi_getdevice -h indihub -p 7625 -t 5
+   ```
+
+4. In a bash script, iterate over all devices:
+   ```bash
+   for device in $(indi_getdevice); do
+       echo "Found device: $device"
+   done
+   ```
 
 ## indi_getprop
 
