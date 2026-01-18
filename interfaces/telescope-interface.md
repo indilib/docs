@@ -14,6 +14,62 @@ The telescope interface in INDI is designed for telescope mounts and other point
 
 The telescope interface is implemented by inheriting from the `INDI::Telescope` base class, which provides a set of standard properties and methods for controlling telescope mounts. By implementing this interface, your driver can be used with any INDI client that supports telescope devices.
 
+## Key Concepts for Telescope Driver Development
+
+Creating an INDI telescope driver involves four essential aspects:
+
+### 1. Define Telescope Capabilities
+
+The first step is to declare what your mount can do using the `SetTelescopeCapability()` method in your driver's constructor. This tells the INDI framework which features your mount supports:
+
+```cpp
+SetTelescopeCapability(
+    TELESCOPE_CAN_GOTO |           // Mount can slew to coordinates
+    TELESCOPE_CAN_SYNC |           // Mount can sync to coordinates
+    TELESCOPE_CAN_PARK |           // Mount can park
+    TELESCOPE_CAN_ABORT |          // Mount can abort motion
+    TELESCOPE_HAS_TIME |           // Mount needs time information
+    TELESCOPE_HAS_LOCATION |       // Mount needs location information
+    TELESCOPE_HAS_TRACK_MODE |     // Mount supports different tracking modes
+    TELESCOPE_CAN_CONTROL_TRACK,   // Mount can enable/disable tracking
+    4);                            // Number of slew rates
+```
+
+### 2. Override Virtual Functions
+
+The `INDI::Telescope` base class defines virtual methods that you must implement to handle commands from clients:
+
+- **`Goto(double ra, double dec)`**: Slew the telescope to specified equatorial coordinates
+- **`Sync(double ra, double dec)`**: Synchronize mount's current position with specified coordinates
+- **`Abort()`**: Stop all mount motion immediately
+- **`Park()` / `UnPark()`**: Move to/from park position
+- **`ReadScopeStatus()`**: Update current mount position (called periodically by timer)
+- **`MoveNS()` / `MoveWE()`**: Manual motion controls
+- **`SetTrackMode()`** / **`SetTrackEnabled()`**: Control tracking behavior
+- **`updateLocation()`** / **`updateTime()`**: Receive location and time from client
+
+### 3. Update Mount Position in ReadScopeStatus
+
+The `ReadScopeStatus()` method is called periodically (typically once per second) and is responsible for:
+
+- Reading current encoder positions from the mount
+- Converting mount-specific coordinates (Alt/Az or RA/Dec encoders) to equatorial coordinates
+- Calling `NewRaDec(ra, dec)` to notify clients of the current position
+- Checking if slewing or parking operations are complete
+
+This is the most critical function for maintaining accurate position reporting.
+
+### 4. Optional: Integration with INDI Alignment Subsystem
+
+For advanced GOTO accuracy, you can integrate the INDI Alignment Subsystem, which:
+
+- Stores a database of sync points (celestial coordinates matched with mount encoder positions)
+- Uses mathematical plugins to transform between celestial and telescope reference frames
+- Compensates for mount alignment errors, atmospheric refraction, and mechanical issues
+- Significantly improves GOTO accuracy across the entire sky
+
+The Alignment Subsystem is particularly valuable for Alt-Az mounts and imperfectly polar-aligned equatorial mounts. See the [INDI Alignment Subsystem](alignment-subsystem.md) page for comprehensive implementation details, examples, and usage instructions.
+
 ## Prerequisites
 
 Before implementing the telescope interface, you should have:
