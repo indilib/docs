@@ -68,6 +68,146 @@ double derivativeTerm() const;
 3. **Low-Pass Filtered Derivative**: Reduces noise sensitivity using configurable time constant (tau)
 4. **Trapezoidal Integration**: More accurate than simple rectangular integration
 
+### Implementation Details
+
+Understanding why the INDI PID implementation uses specific algorithms:
+
+#### Why Derivative on Measurement Instead of Error?
+
+The implementation calculates derivative on the measurement (process variable) rather than on the error:
+
+```cpp
+// From pid.cpp line 152
+m_DerivativeTerm = -(2.0 * m_Kd * (measurement - m_PreviousMeasurement) + (2.0 * m_Tau - m_T) * m_DerivativeTerm)
+                   / (2.0 * m_Tau + m_T);
+```
+
+**Reason**: Prevents "derivative kick" during setpoint changes.
+
+When using derivative on error: `d(error)/dt = d(setpoint - measurement)/dt`
+
+If the setpoint changes suddenly (e.g., slewing to a new target):
+- Error jumps instantly from small value to large value
+- `d(error)/dt` becomes extremely large
+- Derivative term produces a huge spike in output
+- This causes jerky motion and potential overshoot
+
+When using derivative on measurement: `d(measurement)/dt`
+
+- Measurement changes gradually (limited by physical system dynamics)
+- Derivative remains smooth even during setpoint changes
+- Only responds to actual process variable changes, not command changes
+
+**Mathematical equivalence during tracking**:
+When setpoint is constant: `d(setpoint)/dt = 0`
+
+Therefore: `d(error)/dt = -d(measurement)/dt`
+
+The negative sign in the implementation accounts for this, making it mathematically equivalent to error-based derivative during steady tracking, but smooth during setpoint changes.
+
+#### Why Trapezoidal Integration (Using Both Current and Previous Error)?
+
+The implementation uses trapezoidal rule for integration:
+
+```cpp
+// From pid.cpp line 146
+m_IntegralTerm = m_IntegralTerm + 0.5 * m_Ki * m_T * (error + m_PreviousError);
+```
+
+**Reason**: More accurate approximation of the integral.
+
+**Rectangular integration** (simpler but less accurate):
+```
+integral += Ki * T * error_current
+```
+This assumes error is constant over the time interval T, using the current value.
+
+**Trapezoidal integration** (INDI's approach):
+```
+integral += Ki * T * (error_current + error_previous) / 2
+```
+This approximates the area under the error curve as a trapezoid, averaging the start and end values.
+
+**Why it's better**:
+- More accurate when error changes during the sampling interval
+- Second-order accurate (error ~ T²) vs first-order (error ~ T) for rectangular
+- Better handles rapidly changing errors
+- Accumulated integral more accurately represents true error history
+
+**Visual comparison**:
+```
+Error vs Time:
+    |     *  current
+    |    /|
+    |   / | <- Trapezoid (INDI)
+    |  /  |
+    | *   | <- Rectangle (simple method)
+    |_____|___
+         T
+```
+
+The trapezoid captures the actual error change better than rectangle.
+
+#### Why Low-Pass Filter on Derivative?
+
+The derivative term includes a low-pass filter with time constant `tau`:
+
+```cpp
+m_DerivativeTerm = -(2.0 * m_Kd * (measurement - m_PreviousMeasurement) + (2.0 * m_Tau - m_T) * m_DerivativeTerm)
+                   / (2.0 * m_Tau + m_T);
+```
+
+**Reason**: Derivative amplifies high-frequency noise.
+
+Raw derivative: `d(measurement)/dt` is extremely sensitive to measurement noise
+- Small random fluctuations in measurement create large derivative values
+- Output becomes noisy and can excite system resonances
+
+The filter equation implements a first-order low-pass filter that:
+- Smooths out high-frequency noise in the derivative
+- Preserves low-frequency (actual) changes
+- `tau` parameter controls filter strength: higher tau = more filtering
+- Default tau=2 provides good noise rejection without excessive lag
+
+This is why you can increase `Kd` for better damping without making the system noisy.
+
+#### Why Accumulate Capped Integral Instead of Raw Error?
+
+The integrator is limited before accumulation:
+
+```cpp
+// Integral term (with trapezoidal integration)
+m_IntegralTerm = m_IntegralTerm + 0.5 * m_Ki * m_T * (error + m_PreviousError);
+
+// Clamp Integral (anti-windup for integrator limits)
+if (m_IntegratorMin != m_IntegratorMax)
+    m_IntegralTerm = std::min(m_IntegratorMax, std::max(m_IntegratorMin, m_IntegralTerm));
+```
+
+Then later, additional anti-windup when output saturates:
+
+```cpp
+// Anti-windup: Back-calculate integral if output is saturated
+if (output != outputBeforeSaturation && m_Ki != 0.0)
+{
+    m_IntegralTerm = output - m_ProportionalTerm - m_DerivativeTerm;
+}
+```
+
+**Reason**: Prevents integrator windup during saturation.
+
+**The problem with unlimited integration**:
+1. Error persists because system can't move faster (output saturated)
+2. Integral keeps growing to huge values (windup)
+3. When error finally reverses, integral takes long time to unwind
+4. System overshoots significantly and oscillates
+
+**INDI's two-stage anti-windup**:
+1. **Integrator limits**: Prevents integral from growing beyond reasonable bounds
+2. **Back-calculation**: When output saturates, recalculates integral to match what actually contributed to output
+
+This keeps the integral term meaningful and prevents overshoot recovery delays.
+
 ### Practical Example: Telescope Mount Tracking
 
 The Skywatcher Alt-Az mount driver uses PID controllers for tracking celestial objects. Here's a simplified example:
