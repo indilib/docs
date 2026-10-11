@@ -154,6 +154,19 @@ A driver implementing the `INDI::WeatherInterface` must override and implement t
 -   `void setParameterValue(std::string name, double value)`:
     Updates the raw value of a specific weather parameter. This is typically called within your `updateWeather()` implementation.
 
+### Using the INDI::Weather Base Class
+
+For drivers that are primarily weather stations, inherit from `INDI::Weather` (defined in `indiweather.h`) instead of `INDI::DefaultDevice` and `INDI::WeatherInterface`. `INDI::Weather` adds:
+
+-   **Connection Management**: Serial and TCP connection plugins. Call `setWeatherConnection()` in your constructor with `CONNECTION_SERIAL`, `CONNECTION_TCP`, both, or `CONNECTION_NONE`. After connecting, `PortFD` holds the open file descriptor and your `Handshake()` is called.
+-   **Site Location**: A `GEOGRAPHIC_COORD` property (`LocationNP`, with `LAT`, `LONG`, and `ELEV` elements) on the Site Management tab. The location is saved in the configuration file.
+-   **Location from a GPS**: `INDI::Weather` snoops the `GEOGRAPHIC_COORD` property of the GPS device named in `ACTIVE_DEVICES` (`ACTIVE_GPS`), and updates its own location when the GPS reports a new one.
+
+Whenever the location changes, from the client or from the GPS, `INDI::Weather` calls `updateLocation()`:
+
+-   `virtual bool updateLocation(double latitude, double longitude, double elevation)`:
+    Override it if your weather source needs the site location, for example an online weather service that is queried by coordinates. Longitude is in degrees, 0 to 360, increasing eastward. Return `false` to reject the location. The default implementation does nothing and returns `true`.
+
 ### Example Implementation
 
 Here's a simplified example of how a driver might implement the `INDI::WeatherInterface`. This example focuses on the core structure and omits complex serial communication details for clarity.

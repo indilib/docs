@@ -347,7 +347,7 @@ See the complete GPIO driver implementation:
 
 ## Related Guides
 
-- [Best Practices](best-practices/)
-- [System Setup](system-setup/) - Detailed permission configuration
-- [Troubleshooting](troubleshooting/)
+- [Best Practices](../best-practices.md)
+- [System Setup](system-setup.md) - Detailed permission configuration
+- [Troubleshooting](../../support/troubleshooting.md)
 - [INDI API Documentation](https://www.indilib.org/api/)

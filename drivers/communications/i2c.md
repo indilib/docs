@@ -32,16 +32,19 @@ The I2C Connection plugin provides access to I2C bus devices on Linux systems, c
 class MyDriver : public INDI::DefaultDevice
 {
 public:
-    MyDriver()
+    bool initProperties() override
     {
-        setConnectionMode(CONNECTION_I2C);
-        
+        INDI::DefaultDevice::initProperties();
+
+        // Connection plugins are created in initProperties(), once the device name is known.
         i2cConnection = new Connection::I2C(this);
         i2cConnection->setDefaultBusPath("/dev/i2c-1");
         i2cConnection->setDefaultAddress(0x28);  // 7-bit address
         i2cConnection->registerHandshake([&]() { return Handshake(); });
         
         registerConnection(i2cConnection);
+
+        return true;
     }
 
 private:
@@ -123,6 +126,6 @@ i2cdetect -y 1
 
 ## Related Guides
 
-- [Connection Plugins Overview](connection-plugins/)
-- [GPIO Communication](gpio/) - For Raspberry Pi projects
-- [System Setup](system-setup/)
+- [Connection Plugins Overview](connection-plugins.md)
+- [GPIO Communication](gpio.md) - For Raspberry Pi projects
+- [System Setup](system-setup.md)

@@ -30,7 +30,7 @@ Use HTTP/REST/JSON when your device:
 
 ### When to Use TCP Plugin Instead
 
-Use the [TCP Connection Plugin](tcp/) for:
+Use the [TCP Connection Plugin](tcp.md) for:
 - Raw text-based protocols (command/response)
 - Binary protocols over TCP
 - Custom protocol implementations

@@ -16,3 +16,5 @@ This directory contains documentation for advanced topics in INDI driver develop
 - [Logging](logging.md) - Documentation on implementing logging in INDI drivers
 - [Loops](loops.md) - Information about handling loops and timing in INDI drivers
 - [PID Control](pid-control.md) - Guide to using PID controllers for smooth tracking and positioning
+- [Hotplug Support](hotplug.md) - Creating and removing devices as they are plugged in and unplugged
+- [Device Nicknames](device-nicknames.md) - Giving devices stable, user-chosen names

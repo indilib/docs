@@ -135,7 +135,7 @@ class MyInputDevice : public INDI::DefaultDevice, public INDI::InputInterface
 public:
     MyInputDevice() : INDI::DefaultDevice(), INDI::InputInterface(this)
     {
-        setDriverInterface(GENERAL_INTERFACE); // Or a more specific interface if applicable
+        setDriverInterface(INPUT_INTERFACE); // Combine with other flags (e.g. AUX_INTERFACE) as needed
     }
 
     virtual const char *getDefaultName() override
@@ -184,13 +184,18 @@ public:
         // Update the PropertySwitch values
         if (DigitalInputsSP.size() > 0)
         {
-            DigitalInputsSP[0].setState(digitalState1 ? INDI::InputInterface::On : INDI::InputInterface::Off);
-            IDSetSwitch(&DigitalInputsSP[0], nullptr); // Notify clients
+            // Each digital input is a switch property with Off and On elements.
+            DigitalInputsSP[0].reset();
+            DigitalInputsSP[0][digitalState1 ? INDI::InputInterface::On : INDI::InputInterface::Off].setState(ISS_ON);
+            DigitalInputsSP[0].setState(IPS_OK);
+            DigitalInputsSP[0].apply(); // Notify clients
         }
         if (DigitalInputsSP.size() > 1)
         {
-            DigitalInputsSP[1].setState(digitalState2 ? INDI::InputInterface::On : INDI::InputInterface::Off);
-            IDSetSwitch(&DigitalInputsSP[1], nullptr); // Notify clients
+            DigitalInputsSP[1].reset();
+            DigitalInputsSP[1][digitalState2 ? INDI::InputInterface::On : INDI::InputInterface::Off].setState(ISS_ON);
+            DigitalInputsSP[1].setState(IPS_OK);
+            DigitalInputsSP[1].apply(); // Notify clients
         }
 
         std::cout << "Digital Inputs updated: Digital #1=" << (digitalState1 ? "On" : "Off")
@@ -214,8 +219,10 @@ public:
         // Update the PropertyNumber values
         if (AnalogInputsNP.size() > 0)
         {
-            AnalogInputsNP[0].setValue(analogValue1);
-            IDSetNumber(&AnalogInputsNP[0], nullptr); // Notify clients
+            // Each analog input is a number property with a single element.
+            AnalogInputsNP[0][0].setValue(analogValue1);
+            AnalogInputsNP[0].setState(IPS_OK);
+            AnalogInputsNP[0].apply(); // Notify clients
         }
 
         std::cout << "Analog Inputs updated: Analog #1=" << analogValue1 << std::endl;

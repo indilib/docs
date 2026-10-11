@@ -69,10 +69,10 @@ This guide provides a comprehensive approach to troubleshooting INDI drivers. It
 
 1. Check the connection settings (baud rate, parity, etc.)
 2. Reset the device by power cycling it
-3. Increase the connection timeout:
+3. Increase the read timeout. Serial timeouts are passed to each read call, so increase the value used in your driver's `tty_read()` or `tty_read_section()` calls:
    ```cpp
-   // In your driver's Connect method
-   serialConnection->setDefaultTimeout(10); // 10 seconds
+   // Wait up to 5 seconds for a '#'-terminated response
+   rc = tty_read_section(PortFD, response, '#', 5, &nbytes_read);
    ```
 4. Check if the device is being used by another program:
    ```bash
@@ -695,12 +695,12 @@ You can also debug INDI drivers when they're running through Ekos:
        if (isConnected())
        {
            // Define properties when connected
-           defineProperty(&SettingsNP);
+           defineProperty(SettingsNP);
        }
        else
        {
            // Delete properties when disconnected
-           deleteProperty(SettingsNP.name);
+           deleteProperty(SettingsNP);
        }
 
        return true;

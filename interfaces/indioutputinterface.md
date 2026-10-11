@@ -135,7 +135,7 @@ class MyOutputDevice : public INDI::DefaultDevice, public INDI::OutputInterface
 public:
     MyOutputDevice() : INDI::DefaultDevice(), INDI::OutputInterface(this)
     {
-        setDriverInterface(GENERAL_INTERFACE); // Or a more specific interface if applicable
+        setDriverInterface(OUTPUT_INTERFACE); // Combine with other flags (e.g. AUX_INTERFACE) as needed
     }
 
     virtual const char *getDefaultName() override
@@ -175,16 +175,23 @@ public:
     // Implement the crucial UpdateDigitalOutputs method
     virtual bool UpdateDigitalOutputs() override
     {
-        // In a real driver, you would read the actual state of the outputs from hardware
-        // and update the DigitalOutputsSP vector accordingly.
-        // For this example, we'll just log the current states.
-        std::cout << "Updating Digital Outputs status:" << std::endl;
+        // In a real driver, read the actual state of each output from the hardware.
+        // Each output is a switch property with Off and On elements.
         for (size_t i = 0; i < DigitalOutputsSP.size(); ++i)
         {
-            std::cout << "  Output #" << (i + 1) << ": "
-                      << (DigitalOutputsSP[i].getState() == INDI::OutputInterface::On ? "On" : "Off")
-                      << std::endl;
-            // If the state changed, you would call IDSetSwitch(&DigitalOutputsSP[i], nullptr);
+            bool isOn = m_OutputStates[i]; // Replace with a hardware query
+
+            auto current = DigitalOutputsSP[i].findOnSwitchIndex();
+            auto actual  = isOn ? INDI::OutputInterface::On : INDI::OutputInterface::Off;
+
+            // Only notify clients if the state changed.
+            if (current != actual)
+            {
+                DigitalOutputsSP[i].reset();
+                DigitalOutputsSP[i][actual].setState(ISS_ON);
+                DigitalOutputsSP[i].setState(IPS_OK);
+                DigitalOutputsSP[i].apply();
+            }
         }
         return true; // Indicate successful update
     }
@@ -194,17 +201,17 @@ public:
     {
         if (index >= DigitalOutputsSP.size())
         {
-            IDLog("CommandOutput: Invalid output index %u", index);
+            LOGF_ERROR("CommandOutput: Invalid output index %u", index);
             return false;
         }
 
-        // In a real driver, you would send the command to the hardware
-        // For this example, we'll just simulate the command and update the property.
-        DigitalOutputsSP[index].setState(command);
-        IDSetSwitch(&DigitalOutputsSP[index], nullptr); // Notify clients of the new state
+        // Send the command to the hardware. Do not update DigitalOutputsSP here:
+        // OutputInterface::processSwitch() updates the property and notifies clients
+        // based on the value returned by this function.
+        m_OutputStates[index] = (command == INDI::OutputInterface::On); // Replace with a hardware command
 
-        std::cout << "Commanded Output #" << (index + 1) << " to "
-                  << (command == INDI::OutputInterface::On ? "On" : "Off") << std::endl;
+        LOGF_INFO("Commanded Output #%u to %s", index + 1,
+                  command == INDI::OutputInterface::On ? "On" : "Off");
 
         return true; // Indicate successful command
     }
@@ -256,6 +263,10 @@ public:
 
         SetTimer(getCurrentPollingPeriod());
     }
+
+private:
+    // Simulated hardware state for the 4 outputs.
+    std::vector<bool> m_OutputStates = std::vector<bool>(4, false);
 };
 
 // This is typically how an INDI driver is instantiated

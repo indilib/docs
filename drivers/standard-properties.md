@@ -30,28 +30,32 @@ The following tables describe standard properties pertaining to generic devices 
 | CONNECTION       | Switch | CONNECT          | Establish connection to the hardware      |
 |                  |        | DISCONNECT       | Disconnect from the hardware              |
 | DEVICE_PORT      | Text   | PORT             | Device connection port                    |
-| TIME_LST         | Number | LST              | Local sidereal time HH:MM:SS              |
 | TIME_UTC         | Text   | UTC              | UTC time in ISO 8601 format               |
 |                  |        | OFFSET           | UTC offset, in hours +E                   |
 | GEOGRAPHIC_COORD | Number | LAT              | Site latitude (-90 to +90) degrees +N     |
 |                  |        | LONG             | Site longitude (0 to 360) degrees +E      |
 |                  |        | ELEV             | Site elevation, meters                    |
-| ATMOSPHERE       | Number | TEMPERATURE      | Kelvin                                    |
-|                  |        | PRESSURE         | hPa                                       |
-|                  |        | HUMIDITY         | Percentage %                              |
 | UPLOAD_MODE      | Switch | UPLOAD_CLIENT    | Send BLOB to client                       |
 |                  |        | UPLOAD_LOCAL     | Save BLOB locally                         |
 |                  |        | UPLOAD_BOTH      | Send blob to client and save locally      |
 | UPLOAD_SETTINGS  | Text   | UPLOAD_DIR       | Upload directory if BLOB is saved locally |
 |                  |        | UPLOAD_PREFIX    | Prefix used when saving filename          |
+| DRIVER_INFO      | Text   | DRIVER_NAME      | Driver name                               |
+|                  |        | DRIVER_EXEC      | Driver executable                         |
+|                  |        | DRIVER_VERSION   | Driver version                            |
+|                  |        | DRIVER_INTERFACE | Bitmask of the interfaces the driver implements |
+| POLLING_PERIOD   | Number | PERIOD_MS        | Driver polling period in milliseconds     |
 | ACTIVE_DEVICES   | Text   | ACTIVE_TELESCOPE | Name of active telescope device           |
-|                  |        | ACTIVE_CCD       | Name of active CCD device                 |
 |                  |        | ACTIVE_FILTER    | Name of active filter wheel device        |
 |                  |        | ACTIVE_FOCUSER   | Name of active focuser device             |
 |                  |        | ACTIVE_DOME      | Name of active dome device                |
 |                  |        | ACTIVE_GPS       | Name of active GPS device                 |
+|                  |        | ACTIVE_ROTATOR   | Name of active rotator device             |
+|                  |        | ACTIVE_SKYQUALITY | Name of active sky quality meter          |
+|                  |        | ACTIVE_INPUT     | Name of active input device               |
+|                  |        | ACTIVE_OUTPUT    | Name of active output device              |
 
-`ACTIVE_DEVICES` is used to aid clients in automatically providing the users with a list of active devices (i.e. `CONNECTION` is `ON`) whenever needed. For example, a CCD driver may define `ACTIVE_DEVICES` property with one member: `ACTIVE_TELESCOPE`. Suppose that the client is also running LX200 Basic driver to control the telescope. If the telescope is connected, the client may automatically fill the `ACTIVE_TELESCOPE` field or provide a drop-down list of active telescopes to select from. Once set, the CCD driver may record, for example, the telescope name, RA, DEC, among other metadata once it captures an image. Therefore, `ACTIVE_DEVICES` is primarily used to link together different classes of devices to exchange information if required.
+`ACTIVE_DEVICES` is used to aid clients in automatically providing the users with a list of active devices (i.e. `CONNECTION` is `ON`) whenever needed. For example, a CCD driver may define `ACTIVE_DEVICES` property with one member: `ACTIVE_TELESCOPE`. Suppose that the client is also running LX200 Basic driver to control the telescope. If the telescope is connected, the client may automatically fill the `ACTIVE_TELESCOPE` field or provide a drop-down list of active telescopes to select from. Once set, the CCD driver may record, for example, the telescope name, RA, DEC, among other metadata once it captures an image. Therefore, `ACTIVE_DEVICES` is primarily used to link together different classes of devices to exchange information if required. The elements available depend on the device type. For example, cameras snoop the telescope, rotator, focuser, filter wheel and sky quality meter, while domes snoop the telescope, input and output devices.
 
 ## Telescope Properties
 
@@ -103,15 +107,19 @@ Telescope standard properties define critical properties for the operation and c
 |                          |        | PARK_DEFAULT                 | Use driver's default park position.                                                            |
 |                          |        | PARK_WRITE_DATA              | Write TELESCOPE_PARK_POSITION and current parking status to file ($HOME/.indi/ParkData.xml)    |
 |                          |        | PARK_PURGE_DATA              | Delete parking entry for this mount from ~/.indi/ParkData.xml file                             |
-| TELESCOPE_ABORT_MOTION   | Switch | ABORT_MOTION                 | Stop telescope rapidly, but gracefully                                                         |
+| TELESCOPE_ABORT_MOTION   | Switch | ABORT                        | Stop telescope rapidly, but gracefully                                                         |
 | TELESCOPE_TRACK_RATE     | Number |                              | Custom tracking rates in arcseconds per second                                                 |
 |                          |        | TRACK_RATE_RA                | RA tracking rate                                                                               |
 |                          |        | TRACK_RATE_DE                | DEC tracking rate                                                                              |
-| TELESCOPE_INFO           | Number |                              |                                                                                                |
+| TELESCOPE_INFO           | Number |                              | Legacy. Superseded by `SCOPE_INFO`, which is defined by cameras. Some older drivers still define it. |
 |                          |        | TELESCOPE_APERTURE           | Telescope aperture, mm                                                                         |
 |                          |        | TELESCOPE_FOCAL_LENGTH       | Telescope focal length, mm                                                                     |
 |                          |        | GUIDER_APERTURE              | Guide telescope aperture, mm                                                                   |
 |                          |        | GUIDER_FOCAL_LENGTH          | Guider telescope focal length, mm                                                              |
+| TELESCOPE_MOUNT_TYPE     | Switch |                              | Mount type (read only)                                                                         |
+|                          |        | ALTAZ                        | Alt-Az mount                                                                                   |
+|                          |        | EQ_FORK                      | Equatorial fork mount                                                                          |
+|                          |        | EQ_GEM                       | German equatorial mount                                                                        |
 | TELESCOPE_PIER_SIDE      | Switch |                              | GEM Pier Side                                                                                  |
 |                          |        | PIER_EAST                    | Mount on the East side of pier (Pointing West).                                                |
 |                          |        | PIER_WEST                    | Mount on the West side of pier (Pointing East).                                                |
@@ -149,6 +157,10 @@ Telescope standard properties define critical properties for the operation and c
 | JOYSTICK_LOCK_AXIS       | Switch |                              | Select which joystick axes are locked                                                          |
 |                          |        | LOCK_AXIS_1                  | West/East axis                                                                                 |
 |                          |        | LOCK_AXIS_2                  | North/South axis                                                                               |
+| TELESCOPE_JOYSTICK_REVERSE | Switch |                              | Reverse or swap joystick axes (any combination)                                                |
+|                          |        | JOYSTICK_REVERSE_NS          | Reverse the North/South joystick axis                                                          |
+|                          |        | JOYSTICK_REVERSE_WE          | Reverse the West/East joystick axis                                                            |
+|                          |        | JOYSTICK_REVERSE_SWAP        | Swap the North/South and West/East joystick axes                                               |
 | SIMULATE_PIER_SIDE       | Switch |                              | Simulate pier side for mounts that don't report it                                             |
 |                          |        | SIMULATE_YES                 | Yes                                                                                            |
 |                          |        | SIMULATE_NO                  | No                                                                                             |
@@ -188,8 +200,11 @@ For clients that want to implement the GOTO functionality of a telescope, they s
 |                     |        | HOR_BIN               | Horizontal binning                                                                                        |
 |                     |        | VER_BIN               | Vertical binning                                                                                          |
 | CCD_COMPRESSION     | Switch |                       |                                                                                                           |
-|                     |        | CCD_COMPRESS          | Compress CCD frame (If FITS, it uses fpack to send a .fz file)                                            |
-|                     |        | CCD_RAW               | Send raw CCD frame                                                                                        |
+|                     |        | INDI_ENABLED          | Compress frame (If FITS, it uses fpack to send a .fz file)                                                |
+|                     |        | INDI_DISABLED         | Send uncompressed frame                                                                                   |
+| SCOPE_INFO          | Number |                       | Optical train used for FITS headers and plate scale                                                       |
+|                     |        | FOCAL_LENGTH          | Focal length, mm                                                                                          |
+|                     |        | APERTURE              | Aperture, mm                                                                                              |
 | CCD_FRAME_RESET     | Switch | RESET                 | Reset CCD frame to default X,Y,W, and H settings. Set binning to 1x1.                                     |
 | CCD_INFO            | Number |                       |                                                                                                           |
 |                     |        | CCD_MAX_X             | Resolution x                                                                                              |
@@ -311,10 +326,13 @@ Upload Mode affects Fast Exposure behavior depending on the mode selected. For L
 | REL_FOCUS_POSITION   | Number | FOCUS_RELATIVE_POSITION | Move # of steps in `FOCUS_MOTION` direction.                                                        |
 | ABS_FOCUS_POSITION   | Number | FOCUS_ABSOLUTE_POSITION | Move to this absolute position.                                                                     |
 | FOCUS_MAX            | Number | FOCUS_MAX_VALUE         | Focus maximum travel limit in steps.                                                                |
-| FOCUS_REVERSE_MOTION | Switch | ENABLED                 | Reverse default motor direction                                                                     |
-|                      |        | DISABLED                | Do not reverse, move motor in the default direction.                                                |
+| FOCUS_REVERSE_MOTION | Switch | INDI_ENABLED            | Reverse default motor direction                                                                     |
+|                      |        | INDI_DISABLED           | Do not reverse, move motor in the default direction                                                 |
 | FOCUS_ABORT_MOTION   | Switch | ABORT                   | Abort focus motion.                                                                                 |
 | FOCUS_SYNC           | Number | FOCUS_SYNC_VALUE        | Accept this position as the new focuser absolute position.                                          |
+| FOCUS_BACKLASH_TOGGLE | Switch | INDI_ENABLED            | Enable backlash compensation                                                                        |
+|                      |        | INDI_DISABLED           | Disable backlash compensation                                                                       |
+| FOCUS_BACKLASH_STEPS | Number | FOCUS_BACKLASH_VALUE    | Backlash compensation in steps                                                                      |
 
 ## Dome Properties
 
@@ -323,17 +341,12 @@ Upload Mode affects Fast Exposure behavior depending on the mode selected. For L
 | DOME_SPEED               | Number | DOME_SPEED_VALUE       | Set dome speed in RPM.                                                                                   |
 | DOME_MOTION              | Switch | DOME_CW                | Move dome Clockwise, looking down                                                                        |
 |                          |        | DOME_CCW               | Move dome counter clockwise, looking down                                                                |
-| DOME_TIMER               | Number | DOME_TIMER_VALUE       | Move the dome in the direction of `DOME_MOTION` at rate `DOME_SPEED` for `DOME_TIMER_VALUE` milliseconds |
 | REL_DOME_POSITION        | Number | DOME_RELATIVE_POSITION | Move `DOME_RELATIVE_POSITION` degrees azimuth in the direction of `DOME_MOTION`.                         |
 | ABS_DOME_POSITION        | Number | DOME_ABSOLUTE_POSITION | Move dome to `DOME_ABSOLUTE_POSITION` absolute azimuth angle in degrees.                                 |
 | DOME_ABORT_MOTION        | Switch | ABORT                  | Abort dome motion.                                                                                       |
 | DOME_SHUTTER             | Switch | SHUTTER_OPEN           | Open dome shutter.                                                                                       |
 |                          |        | SHUTTER_CLOSE          | Close dome shutter.                                                                                      |
-| DOME_GOTO                | Switch | DOME_HOME              | Go to home position.                                                                                     |
-|                          |        | DOME_PARK              | Go to park position.                                                                                     |
-| DOME_PARAMS              | Number | HOME_POSITION          | Dome home position in absolute degrees azimuth.                                                          |
-|                          |        | PARK_POSITION          | Dome parking position in absolute degrees azimuth.                                                       |
-|                          |        | AUTOSYNC_THRESHOLD     | Threshold in degrees for dome auto-sync                                                                  |
+| DOME_PARAMS              | Number | AUTOSYNC_THRESHOLD     | Threshold in degrees for dome auto-sync                                                                  |
 | DOME_AUTOSYNC            | Switch | DOME_AUTOSYNC_ENABLE   | Enable dome slaving.                                                                                     |
 |                          |        | DOME_AUTOSYNC_DISABLE  | Disable dome slaving.                                                                                    |
 | DOME_MEASUREMENTS        | Number | DM_DOME_RADIUS         | Dome radius (m).                                                                                         |
@@ -397,6 +410,15 @@ Upload Mode affects Fast Exposure behavior depending on the mode selected. For L
 | FLAT_LIGHT_INTENSITY        | Number | FLAT_LIGHT_INTENSITY_VALUE | Light intensity value (0-255)    |
 | FLAT_LIGHT_FILTER_INTENSITY | Number |                            | Filter-specific intensity values |
 
+## Dust Cap Interface Properties
+
+| Name      | Type   | Values | Description                 |
+| --------- | ------ | ------ | --------------------------- |
+| CAP_PARK  | Switch |        | Park or unpark the dust cap |
+|           |        | PARK   | Close the dust cap          |
+|           |        | UNPARK | Open the dust cap           |
+| CAP_ABORT | Switch | ABORT  | Abort dust cap motion       |
+
 ## GPS Interface Properties
 
 | Name               | Type   | Values            | Description                   |
@@ -442,3 +464,89 @@ Upload Mode affects Fast Exposure behavior depending on the mode selected. For L
 |                         |        | INDI_DISABLED          | Disable backlash compensation         |
 | ROTATOR_BACKLASH_STEPS  | Number | ROTATOR_BACKLASH_VALUE | Backlash steps                        |
 | ROTATOR_LIMITS          | Number | ROTATOR_LIMITS_VALUE   | Maximum range in degrees              |
+
+## Power Interface Properties
+
+Only the properties for the features and port types a device supports are defined. In per-port properties, `*` is the port number starting from 1.
+
+| Name                    | Type   | Values             | Description                                              |
+| ----------------------- | ------ | ------------------ | -------------------------------------------------------- |
+| POWER_SENSORS           | Number |                    | Overall power readings (read only)                       |
+|                         |        | SENSOR_VOLTAGE     | Input voltage, V                                         |
+|                         |        | SENSOR_CURRENT     | Total current, A                                         |
+|                         |        | SENSOR_POWER       | Total power, W                                           |
+| OVER_VOLTAGE_PROTECTION | Number | OVERVOLTAGE        | Maximum input voltage before outputs are switched off, V |
+| POWER_OFF_DISCONNECT    | Switch | INDI_ENABLED       | Turn all outputs off when the driver disconnects         |
+|                         |        | INDI_DISABLED      | Leave outputs as they are on disconnect                  |
+| LED_CONTROL             | Switch | INDI_ENABLED       | Turn device LEDs on                                      |
+|                         |        | INDI_DISABLED      | Turn device LEDs off                                     |
+| POWER_CYCLE             | Switch | POWER_CYCLE_Toggle | Cycle power on all outputs                               |
+| POWER_CHANNELS          | Switch | POWER_CHANNEL_\*   | Turn each DC power output on or off                      |
+| POWER_LABELS            | Text   | POWER_CHANNEL_\*   | Label for each DC power output                           |
+| POWER_CURRENTS          | Number | POWER_CHANNEL_\*   | Current drawn by each DC power output, A                 |
+| DEW_CHANNELS            | Switch | DEW_CHANNEL_\*     | Turn each dew heater output on or off                    |
+| DEW_LABELS              | Text   | DEW_CHANNEL_\*     | Label for each dew heater output                         |
+| DEW_DUTY_CYCLES         | Number | DEW_CHANNEL_\*     | Duty cycle of each dew heater output, %                  |
+| DEW_CURRENTS            | Number | DEW_CHANNEL_\*     | Current drawn by each dew heater output, A               |
+| AUTO_DEW_CONTROL        | Switch | DEW_CHANNEL_\*     | Enable automatic dew control for each dew heater output  |
+| VARIABLE_CHANNELS       | Switch | VAR_CHANNEL_\*     | Turn each variable voltage output on or off              |
+| VARIABLE_LABELS         | Text   | VAR_CHANNEL_\*     | Label for each variable voltage output                   |
+| VARIABLE_VOLTAGES       | Number | VAR_CHANNEL_\*     | Voltage of each variable voltage output, V               |
+| USB_PORTS               | Switch | USB_PORT_\*        | Turn each USB port on or off                             |
+| USB_LABELS              | Text   | USB_PORT_\*        | Label for each USB port                                  |
+
+## Polar Alignment Correction (PAC) Interface Properties
+
+| Name                  | Type   | Values          | Description                             |
+| --------------------- | ------ | --------------- | --------------------------------------- |
+| PAC_POSITION          | Number |                 | Current correction position (read only) |
+|                       |        | POSITION_AZ     | Azimuth, degrees                        |
+|                       |        | POSITION_ALT    | Altitude, degrees                       |
+| PAC_MANUAL_ADJUSTMENT | Number |                 | Move each axis by a relative amount     |
+|                       |        | MANUAL_AZ_STEP  | Azimuth step, degrees                   |
+|                       |        | MANUAL_ALT_STEP | Altitude step, degrees                  |
+| PAC_ABORT_MOTION      | Switch | ABORT           | Abort all motion                        |
+| PAC_SPEED             | Number | PAC_SPEED_VALUE | Motion speed                            |
+| PAC_AZ_REVERSE        | Switch | INDI_ENABLED    | Reverse azimuth motion                  |
+|                       |        | INDI_DISABLED   | Use the default azimuth direction       |
+| PAC_ALT_REVERSE       | Switch | INDI_ENABLED    | Reverse altitude motion                 |
+|                       |        | INDI_DISABLED   | Use the default altitude direction      |
+| PAC_HOME              | Switch | HOME_SET        | Set the current position as home        |
+|                       |        | HOME_GO         | Return to the home position             |
+|                       |        | HOME_RESET      | Reset the home position                 |
+| PAC_SYNC              | Number |                 | Set the current position without moving |
+|                       |        | SYNC_AZ         | Azimuth, degrees                        |
+|                       |        | SYNC_ALT        | Altitude, degrees                       |
+| PAC_BACKLASH_ENABLED  | Switch | INDI_ENABLED    | Enable backlash compensation            |
+|                       |        | INDI_DISABLED   | Disable backlash compensation           |
+| PAC_BACKLASH_STEPS    | Number |                 | Backlash compensation per axis          |
+|                       |        | BACKLASH_AZ     | Azimuth backlash, steps                 |
+|                       |        | BACKLASH_ALT    | Altitude backlash, steps                |
+
+## IMU Interface Properties
+
+See the [IMU Interface](../interfaces/imu-interface.md) for the full list of properties.
+
+| Name                 | Type   | Values                                   | Description                                                 |
+| -------------------- | ------ | ---------------------------------------- | ----------------------------------------------------------- |
+| ORIENTATION          | Number |                                          | Orientation (read only)                                     |
+|                      |        | ROLL                                     | Roll, degrees                                               |
+|                      |        | PITCH                                    | Pitch, degrees                                              |
+|                      |        | YAW                                      | Yaw, degrees                                                |
+|                      |        | QUATERNION_W                             | Quaternion W component                                      |
+| ACCELERATION         | Number | ACCEL_X, ACCEL_Y, ACCEL_Z                | Linear acceleration, m/s²                                   |
+| GYROSCOPE            | Number | GYRO_X, GYRO_Y, GYRO_Z                   | Angular velocity                                            |
+| MAGNETOMETER         | Number | MAG_X, MAG_Y, MAG_Z                      | Magnetic field, µT                                          |
+| CALIBRATION_STATUS   | Light  | CAL_SYS, CAL_GYRO, CAL_ACCEL, CAL_MAG    | Calibration status of each sensor                           |
+| CALIBRATION_CONTROL  | Switch | CAL_START, CAL_SAVE, CAL_LOAD, CAL_RESET | Calibration commands                                        |
+| POWER_MODE           | Switch | NORMAL, LOW_POWER, SUSPEND               | Sensor power mode                                           |
+| OPERATION_MODE       | Switch | IMU, COMPASS, M4G, NDOF                  | Sensor operation mode                                       |
+| ANGULAR_UNITS        | Switch | DEGREES, RADIANS                         | Units of the gyroscope data                                 |
+| UPDATE_RATE          | Number | RATE                                     | Sensor update rate, Hz                                      |
+| DEVICE_INFO          | Text   | CHIP_ID, FIRMWARE_VERSION, SENSOR_STATUS | Sensor information (read only)                              |
+| SENSOR_FUSION        | Switch | FUSION_ENABLE, FUSION_DISABLE            | Software sensor fusion, for sensors without on-chip fusion  |
+| COORDINATES          | Number | AXIS1, AXIS2                             | Telescope pointing, HA/DEC or AZ/ALT in degrees (read only) |
+| COORDS_TYPE          | Switch | EQUATORIAL, ALTAZ                        | Coordinate system of `COORDINATES`                          |
+| IMU_FRAME            | Switch | ENU, NWU, SWU                            | Axis convention of the sensor                               |
+| SYNC_AXIS            | Number | SYNC_AXIS1, SYNC_AXIS2                   | Sync `COORDINATES` to a known position                      |
+| MAGNETIC_DECLINATION | Number | MAGNETIC_DECLINATION                     | Magnetic declination at the site, degrees                   |

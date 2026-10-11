@@ -84,7 +84,7 @@ void ISSnoopDevice (XMLEle *root)
             // Check if element and state match
             if (!strcmp(elemName, "MOUNT_GEM") && !strcmp(pcdataXMLEle(ep), "On"))
                 mountType = MOUNT_GEM;
-            else if (!strcmp(elemName, "MOUNT_SIGNEL_ARM") && !strcmp(pcdataXMLEle(ep), "On"))
+            else if (!strcmp(elemName, "MOUNT_SINGLE_ARM") && !strcmp(pcdataXMLEle(ep), "On"))
                 mountType = MOUNT_SINGLE_ARM;
         }
    }

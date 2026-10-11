@@ -233,10 +233,6 @@ The server implementation handles:
 
 For more information about the server implementation, see the [INDI Library API Documentation](https://www.indilib.org/api/index.html).
 
-## Server Guide
-
-For more detailed information about using the INDI server, see the [INDI Server Guide](indiserver-guide.md).
-
 ## Conclusion
 
 The INDI server is a critical component of the INDI ecosystem, providing the glue that connects clients to drivers. By understanding how the server works and how to configure it, you can build robust and efficient INDI-based systems for controlling astronomical equipment.

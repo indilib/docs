@@ -53,6 +53,29 @@ The `PowerCapability` enum defines the features supported by a power device. A d
 | `POWER_HAS_AUTO_DEW`        | Device has automatic dew control.             |
 | `POWER_HAS_POWER_CYCLE`     | Device can cycle power to all ports.          |
 | `POWER_HAS_USB_TOGGLE`      | Device can toggle power to specific USB ports.|
+| `POWER_HAS_OVER_VOLTAGE_PROTECTION` | Device supports over-voltage protection. Defines `OVER_VOLTAGE_PROTECTION`. Older INDI releases only have the misspelled `POWER_HAS_OVER_VOTALGE_PROTECTION`, which is kept as an alias. |
+| `POWER_OFF_ON_DISCONNECT`   | Device can turn its outputs off when the driver disconnects. Defines `POWER_OFF_DISCONNECT`. |
+
+### Over-Voltage Protection and Power Off on Disconnect
+
+These two features are settings that the base class defines, saves in the configuration, and restores. It does not act on them, so your driver must:
+
+- **Over-voltage protection**: Read the limit from `OverVoltageProtectionNP[0].getValue()` (in volts, 13.8 V by default). If the input voltage is above the limit, do not turn DC outputs on, or turn them off if your hardware supports it.
+- **Power off on disconnect**: In your `Disconnect()`, if `PowerOffOnDisconnectSP[INDI_ENABLED].getState() == ISS_ON`, turn off all DC, dew, and variable outputs before closing the connection.
+
+```cpp
+bool MyPowerBox::Disconnect()
+{
+    if (ShouldPowerOffOnDisconnect() &&
+            PowerOffOnDisconnectSP[INDI::DefaultDevice::INDI_ENABLED].getState() == ISS_ON)
+    {
+        for (size_t i = 0; i < PowerChannelsSP.size(); i++)
+            SetPowerPort(i, false);
+    }
+
+    return INDI::DefaultDevice::Disconnect();
+}
+```
 
 ### Key Methods
 

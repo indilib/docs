@@ -152,6 +152,6 @@ See `indi-gphoto/dsusbdriver.cpp` for DSLR shutter control implementation.
 
 ## Related Guides
 
-- [HID Communication](hid/) - For HID devices
-- [System Setup](system-setup/) - udev rules and permissions
-- [Troubleshooting](troubleshooting/)
+- [HID Communication](hid.md) - For HID devices
+- [System Setup](system-setup.md) - udev rules and permissions
+- [Troubleshooting](../../support/troubleshooting.md)

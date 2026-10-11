@@ -103,7 +103,7 @@ In our case, for the `Simple CCD` driver, we are interested in:
 - `CCD_TEMPERATURE` - property of type `INDI::PropertyNumber`, to which we can enter the set temperature of the camera and read the current one
 - `CCD1` - property of type `INDI::PropertyBlob`, which stores the captured photo from the camera
 
-An important note to consider is that there is no way a client can tell whether or not we have received all the properties of a particular driver. This is because of the very nature of INDI protocol where devices are discovered via introspection. Therefore, the client may either choose to wait for a period of time until it begins processing the driver, or watch for a particular property of interest. Since we are planning to change the CCD temperature, we are interested in [INDI Standard Property](../standard-properties.md) `CCD_TEMPERATURE` which we will watch for.
+An important note to consider is that there is no way a client can tell whether or not we have received all the properties of a particular driver. This is because of the very nature of INDI protocol where devices are discovered via introspection. Therefore, the client may either choose to wait for a period of time until it begins processing the driver, or watch for a particular property of interest. Since we are planning to change the CCD temperature, we are interested in [INDI Standard Property](../drivers/standard-properties.md) `CCD_TEMPERATURE` which we will watch for.
 
 To detect the change of a given property, we use the `onUpdate` method, which calls the function we specified when the property is updated:
 

@@ -126,14 +126,6 @@ MyDeviceDriver::MyDeviceDriver()
 {
     // Set the driver version
     setVersion(1, 0);
-
-    // Set up the connection
-    setConnectionMode(CONNECTION_SERIAL);
-    serialConnection = new Connection::Serial(this);
-    serialConnection->registerHandshake([&]() { return Handshake(); });
-    serialConnection->setDefaultBaudRate(Connection::Serial::B_9600);
-    serialConnection->setDefaultPort("/dev/ttyUSB0");
-    registerConnection(serialConnection);
 }
 
 const char *MyDeviceDriver::getDefaultName()
@@ -154,6 +146,14 @@ bool MyDeviceDriver::initProperties()
     // Initialize value number
     ValueNP[0].fill("VALUE", "Value", "%6.2f", 0, 100, 1, 50);
     ValueNP.fill(getDeviceName(), "DEVICE_VALUE", "Value", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
+
+    // Set up the serial connection. Connection plugins are created in initProperties(),
+    // once the device name is known.
+    serialConnection = new Connection::Serial(this);
+    serialConnection->registerHandshake([&]() { return Handshake(); });
+    serialConnection->setDefaultBaudRate(Connection::Serial::B_9600);
+    serialConnection->setDefaultPort("/dev/ttyUSB0");
+    registerConnection(serialConnection);
 
     // Add debug, simulation, and configuration controls
     addAuxControls();
@@ -191,7 +191,7 @@ bool MyDeviceDriver::ISNewNumber(const char *dev, const char *name, double value
     if (!strcmp(dev, getDeviceName()))
     {
         // Check if the message is for the value property
-        if (!strcmp(name, ValueNP.name))
+        if (ValueNP.isNameMatch(name))
         {
             // Update the property values
             ValueNP.update(values, names, n);
@@ -225,7 +225,7 @@ bool MyDeviceDriver::ISNewSwitch(const char *dev, const char *name, ISState *sta
     if (!strcmp(dev, getDeviceName()))
     {
         // Check if the message is for the power property
-        if (!strcmp(name, PowerSP.name))
+        if (PowerSP.isNameMatch(name))
         {
             // Update the property values
             PowerSP.update(states, names, n);
@@ -524,11 +524,10 @@ INDI provides several connection plugins that you can use to connect to devices:
 - **[Serial Connection](https://www.indilib.org/api/classConnection_1_1Serial.html)**: For devices that connect via serial ports.
 - **[TCP Connection](https://www.indilib.org/api/classConnection_1_1TCP.html)**: For devices that connect via TCP/IP.
 
-To use a connection plugin, create an instance of the plugin and register it with the driver:
+To use a connection plugin, create an instance of the plugin in your driver's `initProperties()` and register it with the driver:
 
 ```cpp
 // Set up the serial connection
-setConnectionMode(CONNECTION_SERIAL);
 serialConnection = new Connection::Serial(this);
 serialConnection->registerHandshake([&]() { return Handshake(); });
 serialConnection->setDefaultBaudRate(Connection::Serial::B_9600);

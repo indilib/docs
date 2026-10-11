@@ -419,11 +419,11 @@ bool MyCustomDriver::initProperties()
     char configSay[256]={"Hello, world!"};
     // Next we load the value, if any, from the config file. If the operation fails, we still have our default value.
     // If the operation succeeds, we get the config value.
-    IUGetConfigText(getDeviceName(), "WHAT_TO_SAY", "WHAT_TO_SAY", &configSay, 256);
+    IUGetConfigText(getDeviceName(), "WHAT_TO_SAY", "WHAT_TO_SAY", configSay, 256);
     // Next we intilize the property like before. This time we set the initial text to configSay.
     WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", configSay);
     WhatToSayTP.fill(getDeviceName(), "WHAT_TO_SAY", "Got something to say?", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
-    defineProperty(&WhatToSayTP);
+    defineProperty(WhatToSayTP);
 
     return true;
 }
@@ -518,6 +518,34 @@ a message showing it was updated, so the client can update the UI.
 All of the `property.apply()` functions are used to let the client know that a property was updated.
 
 See [helpful functions](helpful-functions.md) for more info.
+
+### Handling Client Updates with updateProperty()
+
+Most client requests follow the same steps: check whether the values changed, send them to the device, then update the property and tell the client whether it worked. `INDI::DefaultDevice::updateProperty()` does all of this for you:
+
+```cpp
+template<typename PropertyType, typename ValueType>
+bool updateProperty(PropertyType &property, ValueType *values, char *names[], int n,
+                    std::function<bool()> updater, bool saveConfig = false);
+```
+
+- If the values are unchanged, it sets the property to OK, sends it to the client, and returns `false` without calling `updater`.
+- Otherwise it calls `updater`, which sends the new values to the device. If `updater` returns `true`, the property is updated with the new values and set to OK, and saved in the configuration if `saveConfig` is `true`. If `updater` returns `false`, the property is set to alert and keeps its old values.
+- It returns `true` only if the values changed and `updater` succeeded.
+
+It works with number, text, and switch properties. For example, in `ISNewNumber()`:
+
+```cpp
+if (GainNP.isNameMatch(name))
+{
+    updateProperty(GainNP, values, names, n, [this, values]()
+    {
+        // Send the new gain to the device. values[0] is the requested gain.
+        return sendGain(values[0]);
+    }, true);
+    return true;
+}
+```
 
 Okay, so now we understand properties a bit. We can use them, save, and load them.
 But most drivers will want to connect to something else, and in this hobby, that is

@@ -23,13 +23,14 @@ This directory contains documentation for INDI device interfaces. All of these a
 - [Output Interface](indioutputinterface.md) - Documentation for implementing the output interface
 - [Rotator Interface](indirotatorinterface.md) - Documentation for implementing the rotator interface
 - [Dust Cap Interface](indidustcapinterface.md) - Documentation for implementing the dust cap interface
-- [Dome Interface](indidomeinterface.md) - Documentation for implementing the dome interface
+- [Dome Interface](dome-interface.md) - Documentation for implementing the dome interface
 - [PAC Interface](pac-interface.md) - Documentation for implementing the Polar Alignment Correction interface
+- [IMU Interface](imu-interface.md) - Documentation for implementing the Inertial Measurement Unit interface
 
 ## Other Core Interfaces
 
 The following core interfaces are also part of INDI. Documentation for these interfaces will be added:
 
 - GPS Interface
-- Detector Interface
+- Detector, Spectrograph, and Receiver (Sensor) Interfaces
 - AUX Interface

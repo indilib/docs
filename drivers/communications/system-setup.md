@@ -559,9 +559,9 @@ Avoid running INDI drivers as root. Use proper udev rules and group memberships 
 
 ## Related Guides
 
-- [Serial Connection](serial/)
-- [USB Communication](usb/)
-- [HID Communication](hid/)
-- [GPIO Communication](gpio/)
-- [I2C Communication](i2c/)
-- [Troubleshooting](troubleshooting/)
+- [Serial Connection](serial.md)
+- [USB Communication](usb.md)
+- [HID Communication](hid.md)
+- [GPIO Communication](gpio.md)
+- [I2C Communication](i2c.md)
+- [Troubleshooting](../../support/troubleshooting.md)

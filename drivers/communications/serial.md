@@ -30,11 +30,11 @@ The Serial Connection plugin handles RS-232 serial ports, USB-to-Serial adapters
 class MyDriver : public INDI::DefaultDevice
 {
 public:
-    MyDriver()
+    bool initProperties() override
     {
-        // Set default connection mode to Serial
-        setConnectionMode(CONNECTION_SERIAL);
+        INDI::DefaultDevice::initProperties();
 
+        // Connection plugins are created in initProperties(), once the device name is known.
         // Create the Serial Connection plugin
         serialConnection = new Connection::Serial(this);
 
@@ -47,6 +47,8 @@ public:
 
         // Register with the driver
         registerConnection(serialConnection);
+
+        return true;
     }
 
 private:
@@ -182,6 +184,46 @@ bool MyDriver::sendBinaryData(const uint8_t *data, size_t len)
 }
 ```
 
+## Automatic Port Selection
+
+USB serial adapters can show up under a different port name each time they are plugged in, so the serial plugin helps users connect without having to pick the right port by hand.
+
+### System Ports
+
+When the device connects, the plugin scans the system for serial ports and lists them in the `SYSTEM_PORTS` property, so users can pick a port with one click. On Linux, it lists the stable `/dev/serial/by-id/` links instead of `/dev/ttyUSBx` names when there is one for every adapter. Identical adapters (same USB vendor and product ID) may not get their own by-id links, and in that case the `/dev/ttyUSBx` names are listed instead.
+
+If the port saved in the driver's configuration is no longer available (it is neither among the detected ports nor present on disk) and **exactly one** serial port is detected, the plugin uses that port instead. Custom or mapped ports that still exist, such as a udev symlink like `/dev/mount`, are always kept.
+
+### Auto Search
+
+The `DEVICE_AUTO_SEARCH` property lets users enable auto search. When enabled and connecting to the selected port fails, the plugin tries every other detected port, in random order so that several drivers searching at the same time don't collide, and calls your handshake on each one. On success, it saves the working port and, on Linux, turns auto search off again.
+
+Auto search relies on your handshake to recognize the device, so make sure `Handshake()` returns `false` for any device that is not yours.
+
+### Matching Ports by Name
+
+Some devices include their name in the USB serial ID, for example `/dev/serial/by-id/usb-Pegasus_Astro_FlatMaster_...`. For these devices, call `setPortMatchPattern()` with a case-insensitive regular expression. When the saved port is not available, the plugin selects the first detected port whose path matches the pattern, without having to try a handshake on every port:
+
+```cpp
+bool MyDriver::initProperties()
+{
+    INDI::DefaultDevice::initProperties();
+
+    serialConnection = new Connection::Serial(this);
+    serialConnection->setDefaultBaudRate(Connection::Serial::B_115200);
+
+    // Select the port whose ID contains "FlatMaster" if the saved port is gone.
+    serialConnection->setPortMatchPattern("FlatMaster");
+
+    serialConnection->registerHandshake([&]() { return Handshake(); });
+    registerConnection(serialConnection);
+
+    return true;
+}
+```
+
+The pattern can match several names, such as `"303a|espressif|wheelly|usbmodem"`. If the pattern is empty (the default), no matching is done.
+
 ## Best Practices
 
 - **Baud Rate**: Use the device's documented baud rate
@@ -229,7 +271,7 @@ Solution: Verify baud rate in device documentation
 
 ## Related Guides
 
-- [Connection Plugins Overview](connection-plugins/)
-- [Best Practices](best-practices/)
-- [Troubleshooting](troubleshooting/)
-- [System Setup](system-setup/)
+- [Connection Plugins Overview](connection-plugins.md)
+- [Best Practices](../best-practices.md)
+- [Troubleshooting](../../support/troubleshooting.md)
+- [System Setup](system-setup.md)

@@ -30,16 +30,19 @@ The TCP Connection plugin handles TCP/IP network connections for devices accessi
 class MyDriver : public INDI::DefaultDevice
 {
 public:
-    MyDriver()
+    bool initProperties() override
     {
-        setConnectionMode(CONNECTION_TCP);
-        
+        INDI::DefaultDevice::initProperties();
+
+        // Connection plugins are created in initProperties(), once the device name is known.
         tcpConnection = new Connection::TCP(this);
         tcpConnection->setDefaultHost("192.168.1.100");
         tcpConnection->setDefaultPort(9999);
         tcpConnection->registerHandshake([&]() { return Handshake(); });
         
         registerConnection(tcpConnection);
+
+        return true;
     }
 
 private:
@@ -104,6 +107,6 @@ bool MyDriver::sendCommand(const char *cmd, char *res, int reslen)
 
 ## Related Guides
 
-- [Connection Plugins Overview](connection-plugins/)
-- [Best Practices](best-practices/)
-- [Troubleshooting](troubleshooting/)
+- [Connection Plugins Overview](connection-plugins.md)
+- [Best Practices](../best-practices.md)
+- [Troubleshooting](../../support/troubleshooting.md)

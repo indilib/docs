@@ -94,6 +94,8 @@ For comprehensive guides on INDI driver development, please see the following pa
 - [Inter-Driver Communication](advanced/inter-driver-communication.md): Guide to communication between INDI drivers
 - [Logging](advanced/logging.md): Documentation on implementing logging in INDI drivers
 - [Loops](advanced/loops.md): Information about handling loops and timing in INDI drivers
+- [Hotplug Support](advanced/hotplug.md): Creating and removing devices as they are plugged in and unplugged
+- [Device Nicknames](advanced/device-nicknames.md): Giving devices stable, user-chosen names
 
 ### Device Interfaces
 

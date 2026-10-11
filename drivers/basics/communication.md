@@ -160,7 +160,7 @@ private:
 ```
 
 ```cpp
-// In your constructor or initProperties
+// In initProperties
 tcpConnection = new Connection::TCP(this);
 tcpConnection->setDefaultHost("192.168.1.100");
 tcpConnection->setDefaultPort(9999);
@@ -174,31 +174,36 @@ UDP connections are used for devices that communicate using UDP datagrams.
 
 #### Setting Up a UDP Connection
 
+There is no separate UDP plugin. UDP is a mode of the TCP connection plugin:
+
 ```cpp
-#include "libindi/connectionplugins/connectionudp.h"
+#include "libindi/connectionplugins/connectiontcp.h"
 
 // In your class definition
 private:
-    Connection::UDP *udpConnection{nullptr};
+    Connection::TCP *udpConnection{nullptr};
     int PortFD{-1};
     bool Handshake();
 ```
 
 ```cpp
-// In your constructor or initProperties
-udpConnection = new Connection::UDP(this);
+// In initProperties
+udpConnection = new Connection::TCP(this);
 udpConnection->setDefaultHost("192.168.1.100");
 udpConnection->setDefaultPort(9999);
+udpConnection->setConnectionType(Connection::TCP::TYPE_UDP);
 udpConnection->registerHandshake([&]() { return Handshake(); });
 registerConnection(udpConnection);
 ```
+
+See the [UDP Connection](../communications/udp.md) guide for how to read replies as whole datagrams.
 
 ## USB Connections
 
 For USB devices, there is no specific connection plugin as you are expected to use libusb directly. INDI provides the `INDI::USBDevice` class that you can inherit from to simplify USB communication.
 
 ```cpp
-#include "libindi/usb/usb.h"
+#include "libindi/indiusbdevice.h"
 
 class MyUSBDriver : public INDI::DefaultDevice, public INDI::USBDevice
 {
@@ -225,9 +230,7 @@ private:
 INDI drivers can support multiple connection methods by registering multiple connection plugins. This allows users to choose the most appropriate connection method for their setup.
 
 ```cpp
-// In your constructor or initProperties
-setConnectionMode(CONNECTION_SERIAL | CONNECTION_TCP);
-
+// In initProperties
 // Create and register the Serial Connection plugin
 serialConnection = new Connection::Serial(this);
 serialConnection->registerHandshake([&]() { return Handshake(); });
@@ -275,14 +278,14 @@ bool MyCustomDriver::updateProperties()
     if (isConnected())
     {
         // Add the properties to the driver when we connect.
-        defineProperty(&SayHelloSP);
-        defineProperty(&WhatToSayTP);
+        defineProperty(SayHelloSP);
+        defineProperty(WhatToSayTP);
     }
     else
     {
         // And remove them when we disconnect.
-        deleteProperty(SayHelloSP.name);
-        deleteProperty(WhatToSayTP.name);
+        deleteProperty(SayHelloSP);
+        deleteProperty(WhatToSayTP);
     }
 
     return true;
@@ -308,4 +311,4 @@ When implementing device communication in your INDI drivers, follow these best p
 7. **Close the connection properly** when disconnecting from the device
 8. **Document the supported connection methods** in your driver's documentation
 
-Now that we have established communication with our device, let's learn how to perform periodic operations in [loops](loops.md).
+Now that we have established communication with our device, let's learn how to perform periodic operations in [loops](../advanced/loops.md).

@@ -175,6 +175,6 @@ See `indi-sx/sxwheel.cpp` for Starlight Xpress filter wheel implementation.
 
 ## Related Guides
 
-- [USB Communication](usb/) - For non-HID USB devices
-- [System Setup](system-setup/) - Detailed permission configuration
-- [Troubleshooting](troubleshooting/)
+- [USB Communication](usb.md) - For non-HID USB devices
+- [System Setup](system-setup.md) - Detailed permission configuration
+- [Troubleshooting](../../support/troubleshooting.md)

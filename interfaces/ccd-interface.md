@@ -6,13 +6,21 @@ parent: Device Interfaces
 
 # Implementing the Camera Interface
 
-This guide provides a comprehensive overview of implementing the camera interface in INDI drivers. It covers the basic structure of a camera driver, how to implement the required methods, and how to handle device-specific functionality.
+This guide provides a comprehensive overview of implementing the camera interface in INDI drivers. It covers the structure of a camera driver, the capabilities a camera can advertise, the methods you need to implement, and how to deliver images to clients.
 
 ## Introduction to the Camera Interface
 
-The camera interface in INDI is designed for astronomical cameras and other imaging devices. It provides a standardized way for clients to control imaging devices, including setting exposure parameters, downloading images, and controlling various camera features.
+The camera interface is implemented by inheriting from the `INDI::CCD` base class (defined in `indiccd.h`). The class name remains CCD for historical reasons, but it supports all types of astronomical cameras, including CMOS sensors.
 
-The camera interface is implemented by inheriting from the `INDI::CCD` base class (the class name remains CCD for historical reasons, but it supports all types of cameras including CMOS sensors). This class provides a set of standard properties and methods for controlling imaging devices. By implementing this interface, your driver can be used with any INDI client that supports camera devices.
+`INDI::CCD` handles most of the work that is common to all cameras:
+
+- Defining the standard exposure, frame, binning, temperature, and upload properties
+- Encoding images as FITS or XISF (or sending native formats as-is) and uploading them to clients, saving them locally, or both
+- Writing FITS headers, including telescope position, focal length, filter, and sky quality snooped from other devices
+- Live video streaming and recording through `INDI::StreamManager`
+- Guiding through an ST4 port, via `INDI::GuiderInterface`
+
+Your driver only needs to talk to the camera hardware: start and abort exposures, read the image into a buffer, and report temperature.
 
 ## Prerequisites
 
@@ -20,7 +28,7 @@ Before implementing the camera interface, you should have:
 
 - Basic knowledge of C++ programming
 - Understanding of the INDI protocol and architecture
-- Familiarity with the device's communication protocol
+- Familiarity with the camera's SDK or communication protocol
 - Development environment set up (compiler, build tools, etc.)
 - INDI library installed
 
@@ -28,805 +36,550 @@ Before implementing the camera interface, you should have:
 
 The camera interface consists of several key components:
 
-- **Base Class**: `INDI::CCD` is the base class for all camera drivers.
-- **Standard Properties**: A set of standard properties for controlling camera devices.
-- **Virtual Methods**: A set of virtual methods that must be implemented by the driver.
-- **Helper Methods**: A set of helper methods for common camera operations.
+- **Base Class**: `INDI::CCD` inherits from `INDI::DefaultDevice` and `INDI::GuiderInterface`.
+- **Chips**: Each camera has a primary chip (`PrimaryCCD`) and an optional guide chip (`GuideCCD`), both of type `INDI::CCDChip`. A chip holds the sensor geometry, the current frame and binning, the exposure properties, and the image frame buffer.
+- **Capabilities**: A bitmask that tells the base class which features your camera supports.
+- **Virtual Methods**: Methods that your driver overrides to control the hardware.
 
-### Base Class
+### CCDCapability Enum
 
-The `INDI::CCD` base class inherits from `INDI::DefaultDevice` and provides additional functionality specific to camera devices. It defines standard properties for exposure control, frame settings, temperature control, and more.
+Call `SetCCDCapability()` in your driver's constructor or `initProperties()` to declare what your camera can do. The capabilities can also be updated after the camera is connected (for example, after querying the SDK), but they must be set before `Connect()` returns.
 
-### Standard Properties
+```cpp
+enum
+{
+    CCD_CAN_BIN        = 1 << 0,  /*!< Does the CCD support binning?  */
+    CCD_CAN_SUBFRAME   = 1 << 1,  /*!< Does the CCD support setting ROI?  */
+    CCD_CAN_ABORT      = 1 << 2,  /*!< Can the CCD exposure be aborted?  */
+    CCD_HAS_GUIDE_HEAD = 1 << 3,  /*!< Does the CCD have a guide head?  */
+    CCD_HAS_ST4_PORT   = 1 << 4,  /*!< Does the CCD have an ST4 port?  */
+    CCD_HAS_SHUTTER    = 1 << 5,  /*!< Does the CCD have a mechanical shutter?  */
+    CCD_HAS_COOLER     = 1 << 6,  /*!< Does the CCD have a cooler and temperature control?  */
+    CCD_HAS_BAYER      = 1 << 7,  /*!< Does the CCD send color data in bayer format?  */
+    CCD_HAS_STREAMING  = 1 << 8,  /*!< Does the CCD support live video streaming?  */
+    CCD_HAS_DSP        = 1 << 10  /*!< Does the CCD support image processing?  */
+} CCDCapability;
+```
 
-The camera interface defines several standard properties:
+| Capability           | Effect                                                                 | Methods to override                                        |
+| -------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- |
+| _(always)_           | Exposure, frame type, info, compression, upload, and format properties | `StartExposure()`                                          |
+| `CCD_CAN_ABORT`      | Defines `CCD_ABORT_EXPOSURE`                                           | `AbortExposure()`                                          |
+| `CCD_CAN_SUBFRAME`   | Makes `CCD_FRAME` writable, and defines `CCD_FRAME_RESET`              | `UpdateCCDFrame()`                                         |
+| `CCD_CAN_BIN`        | Defines `CCD_BINNING` and `CCD_FRAME_RESET`                            | `UpdateCCDBin()`                                           |
+| `CCD_HAS_COOLER`     | Defines `CCD_TEMPERATURE` and `CCD_TEMP_RAMP`                          | `SetTemperature()`                                         |
+| `CCD_HAS_SHUTTER`    | Allows dark and bias frames to be taken with the shutter closed        | `UpdateCCDFrameType()` (optional)                          |
+| `CCD_HAS_BAYER`      | Defines `CCD_CFA` and adds Bayer keywords to the FITS header           | —                                                          |
+| `CCD_HAS_ST4_PORT`   | Defines `TELESCOPE_TIMED_GUIDE_NS` and `TELESCOPE_TIMED_GUIDE_WE`      | `GuideNorth()`, `GuideSouth()`, `GuideEast()`, `GuideWest()` |
+| `CCD_HAS_GUIDE_HEAD` | Defines the `GUIDER_*` properties for the guide chip                   | `StartGuideExposure()`, `AbortGuideExposure()`, and the `UpdateGuider*()` methods |
+| `CCD_HAS_STREAMING`  | Creates `Streamer` and its streaming and recording properties          | `StartStreaming()`, `StopStreaming()`                      |
+| `CCD_HAS_DSP`        | Creates the DSP manager for image processing                           | —                                                          |
 
-- **CCD_EXPOSURE**: Controls the exposure duration.
-- **CCD_ABORT_EXPOSURE**: Aborts the current exposure.
-- **CCD_FRAME**: Controls the frame settings (binning, region of interest).
-- **CCD_TEMPERATURE**: Controls and monitors the camera temperature.
-- **CCD_COOLER**: Controls the camera cooler.
-- **CCD_COOLER_POWER**: Monitors the camera cooler power.
-- **CCD_GAIN**: Controls the camera gain.
-- **CCD_OFFSET**: Controls the camera offset.
-- **CCD_FRAME_TYPE**: Controls the frame type (light, dark, bias, flat).
-- **CCD_FRAME_RESET**: Resets the frame to full size.
-- **CCD_INFO**: Provides information about the camera (pixel size, bit depth, etc.).
-- **CCD_COMPRESSION**: Controls image compression.
-- **CCD_RAPID_GUIDE**: Controls rapid guiding.
-- **CCD_FAST_EXPOSURE**: Controls fast exposure mode.
+You do not need to set `CCD_HAS_GUIDE_HEAD` yourself: calling `SetGuiderParams()` sets it.
 
-### Virtual Methods
+## Standard Properties
 
-The camera interface defines several virtual methods that must be implemented by the driver:
+`INDI::CCD` and `INDI::CCDChip` define the following properties. See [Standard Properties](../drivers/standard-properties.md#ccd-properties) for their elements.
 
-- **StartExposure**: Starts an exposure.
-- **AbortExposure**: Aborts the current exposure.
-- **UpdateCCDFrame**: Updates the camera frame settings.
-- **UpdateCCDBin**: Updates the camera binning settings.
-- **UpdateCCDFrameType**: Updates the camera frame type.
-- **UpdateCCDCompression**: Updates the camera compression settings.
-- **UpdateRapidGuide**: Updates the rapid guide settings.
-- **UpdateCCDTemperature**: Updates the camera temperature.
+| Property                                       | Description                                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `CCD_EXPOSURE`                                 | Start an exposure of the given duration in seconds. Shows the time left while exposing.    |
+| `CCD_ABORT_EXPOSURE`                           | Abort the current exposure.                                                                |
+| `CCD_FRAME`                                    | Region of interest (X, Y, width, height) in unbinned pixels. Read only unless the camera can subframe. |
+| `CCD_FRAME_RESET`                              | Reset the frame to the full sensor and the binning to 1x1.                                 |
+| `CCD_BINNING`                                  | Horizontal and vertical binning.                                                           |
+| `CCD_FRAME_TYPE`                               | Light, bias, dark, or flat.                                                                |
+| `CCD_INFO`                                     | Sensor resolution, pixel size, and bits per pixel (read only).                             |
+| `CCD_TEMPERATURE`                              | Current sensor temperature. Setting it requests a new target temperature.                  |
+| `CCD_TEMP_RAMP`                                | Maximum temperature change per minute, and the threshold for reaching the target.           |
+| `CCD_CAPTURE_FORMAT`                           | Native capture formats added by the driver with `addCaptureFormat()`.                      |
+| `CCD_TRANSFER_FORMAT`                          | How images are encoded for upload: FITS, native, or XISF.                                  |
+| `CCD_COMPRESSION`                              | Compress images before upload.                                                             |
+| `CCD1`                                         | The BLOB used to send the primary chip image to clients (`CCD2` for the guide chip).       |
+| `UPLOAD_MODE`, `UPLOAD_SETTINGS`               | Send images to the client, save them locally, or both, and where to save them.             |
+| `CCD_FAST_TOGGLE`, `CCD_FAST_COUNT`            | Fast exposure mode: start the next exposure as soon as the previous one completes.         |
+| `ACTIVE_DEVICES`                               | Telescope, rotator, focuser, filter wheel, and sky quality meter to snoop for FITS headers. |
+| `SCOPE_INFO`                                   | Focal length and aperture, used for FITS headers and plate scale.                          |
+| `FITS_HEADER`                                  | Lets clients add custom FITS keywords.                                                     |
+| `GUIDER_EXPOSURE`, `GUIDER_FRAME`, ...         | The equivalent properties for the guide chip, if the camera has one.                      |
+
+Common camera features that are **not** defined by the base class, such as gain, offset, and cooler control, are defined by each driver. Use the conventional names so clients can find them:
+
+| Property           | Type   | Elements                  | Description                       |
+| ------------------ | ------ | ------------------------- | --------------------------------- |
+| `CCD_GAIN`         | Number | `GAIN`                    | Sensor gain                       |
+| `CCD_OFFSET`       | Number | `OFFSET`                  | Sensor offset                     |
+| `CCD_COOLER`       | Switch | `COOLER_ON`, `COOLER_OFF` | Turn the cooler on or off         |
+| `CCD_COOLER_POWER` | Number | `CCD_COOLER_VALUE`        | Cooler power in percent (read only) |
+
+## Key Methods
+
+### Virtual Methods to Override
+
+- `virtual bool StartExposure(float duration)`:
+  Starts an exposure of `duration` seconds on the primary chip. **Required.** Return `true` if the exposure started, or `false` on error. Do not block until the exposure ends; report completion from `TimerHit()` or an SDK callback, as described in [The Exposure Lifecycle](#the-exposure-lifecycle).
+
+- `virtual bool AbortExposure()`:
+  Aborts the current exposure. Required for `CCD_CAN_ABORT`.
+
+- `virtual bool UpdateCCDFrame(int x, int y, int w, int h)`:
+  Called when the client changes the region of interest. Coordinates are in unbinned pixels, and (0,0) is the top-left pixel. Configure the hardware, then call `INDI::CCD::UpdateCCDFrame()` (or `PrimaryCCD.setFrame()`) to store the new frame, and resize the frame buffer. Return `false` if the frame is not supported.
+
+- `virtual bool UpdateCCDBin(int hor, int ver)`:
+  Called when the client changes binning. Configure the hardware, then call `INDI::CCD::UpdateCCDBin()` (or `PrimaryCCD.setBin()`) to store the new binning, and resize the frame buffer. Return `false` if the binning is not supported.
+
+- `virtual bool UpdateCCDFrameType(INDI::CCDChip::CCD_FRAME fType)`:
+  Called when the client changes the frame type (`LIGHT_FRAME`, `BIAS_FRAME`, `DARK_FRAME`, or `FLAT_FRAME`). Optional: you can instead check `PrimaryCCD.getFrameType()` when the exposure starts, for example to keep the shutter closed for dark and bias frames.
+
+- `virtual int SetTemperature(double temperature)`:
+  Sets the target sensor temperature in °C. Required for `CCD_HAS_COOLER`. Return:
+  - `1` if the camera is already at the requested temperature
+  - `0` if the camera is moving toward it. The base class sets `CCD_TEMPERATURE` to busy and sets it back to OK once the temperature you report is within the ramp threshold.
+  - `-1` on error
+
+- `virtual bool SetCaptureFormat(uint8_t index)`:
+  Called when the client selects a capture format from `CCD_CAPTURE_FORMAT`. `index` is the order in which you added the formats with `addCaptureFormat()`.
+
+- `virtual bool StartStreaming()` / `virtual bool StopStreaming()`:
+  Start and stop live video. Required for `CCD_HAS_STREAMING`.
+
+- `virtual IPState GuideNorth(uint32_t ms)`, `GuideSouth()`, `GuideEast()`, `GuideWest()`:
+  Send an ST4 guide pulse of `ms` milliseconds. Required for `CCD_HAS_ST4_PORT`. See the [Guider Interface](guider.md) for return values.
+
+- `virtual bool StartGuideExposure(float duration)`, `AbortGuideExposure()`, `UpdateGuiderFrame()`, `UpdateGuiderBin()`, `UpdateGuiderFrameType()`:
+  The equivalent methods for the guide chip.
+
+- `virtual void addFITSKeywords(INDI::CCDChip *targetChip, std::vector<INDI::FITSRecord> &fitsKeywords)`:
+  Adds FITS header keywords. Override it to add camera-specific keywords, and call the base implementation first.
+
+- `virtual void UploadComplete(INDI::CCDChip *targetChip)`:
+  Called after an image has been uploaded or saved. Override it if you need to know when the upload finished.
 
 ### Helper Methods
 
-The camera interface provides several helper methods for common camera operations:
+- `void SetCCDCapability(uint32_t cap)`: Sets the camera capabilities.
+- `void SetCCDParams(int x, int y, int bpp, float xf, float yf)`: Sets the primary chip resolution, bits per pixel, and pixel size in microns. It also resets the frame to the full sensor and binning to 1x1.
+- `void SetGuiderParams(int x, int y, int bpp, float xf, float yf)`: Sets the guide chip parameters, and sets `CCD_HAS_GUIDE_HEAD`.
+- `void addCaptureFormat(const CaptureFormat &format)`: Adds a native capture format, such as `{"INDI_MONO", "Mono", 16, true}` (name, label, bits per pixel, default).
+- `bool ExposureComplete(INDI::CCDChip *targetChip)`: Call this when the image is in the chip's frame buffer. The base class then encodes, uploads, and saves the image in a background thread, and sets `CCD_EXPOSURE` back to OK.
 
-- **SetCCDParams**: Sets the camera parameters (resolution, pixel size, bit depth, etc.).
-- **SetGuiderParams**: Sets the guider parameters (resolution, pixel size, bit depth, etc.).
-- **SetCCDCapability**: Sets the camera capabilities (can bin, can subframe, has cooler, etc.).
-- **SetCCDTemperature**: Sets the camera temperature.
-- **SetCCDTemp**: Sets the camera temperature (alias for SetCCDTemperature).
-- **SetGuiderExposure**: Sets the guider exposure.
-- **ExposureComplete**: Signals that an exposure is complete.
-- **GuideComplete**: Signals that a guide exposure is complete.
-- **GrabImage**: Grabs an image from the camera.
-- **GrabImageHelper**: Helper function for GrabImage.
+### CCDChip Methods
 
-## Implementing a Basic Camera Driver
+These are the `INDI::CCDChip` methods you will use most often, on `PrimaryCCD` or `GuideCCD`:
 
-Let's create a simple INDI driver for a hypothetical camera called "MyCamera". This camera has a simple USB interface and supports basic commands for setting exposure, binning, and temperature.
+| Method                                      | Description                                                                 |
+| ------------------------------------------- | --------------------------------------------------------------------------- |
+| `getXRes()`, `getYRes()`                    | Full sensor resolution.                                                     |
+| `getSubX()`, `getSubY()`, `getSubW()`, `getSubH()` | Current frame, in unbinned pixels.                                   |
+| `getBinX()`, `getBinY()`                    | Current binning.                                                            |
+| `getBPP()`                                  | Bits per pixel.                                                             |
+| `getFrameType()`                            | Current frame type.                                                         |
+| `getFrameBuffer()`                          | Pointer to the image buffer.                                                |
+| `setFrameBufferSize(uint32_t nbuf)`         | Allocates the image buffer.                                                 |
+| `setExposureDuration(double duration)`      | Records the exposure duration and start time for the FITS header. Call it when the exposure starts. |
+| `setExposureLeft(double duration)`          | Updates the time left in `CCD_EXPOSURE` and sends it to clients.             |
+| `setExposureFailed()`                       | Sets `CCD_EXPOSURE` to the alert state.                                     |
+| `binFrame()`                                | Bins the frame buffer in software, for cameras that do not bin in hardware. |
+| `setNAxis(int value)`                       | Sets 2 for mono images, or 3 for RGB images.                                |
+| `setMinMaxStep(property, element, min, max, step, sendToClient)` | Changes the limits of a chip property, such as the exposure range. |
 
-### Step 1: Create the Header File
+## The Exposure Lifecycle
 
-Create a file named `mycameradriver.h` with the following content:
+When a client sets `CCD_EXPOSURE`:
+
+1. The base class validates the duration against the limits of `CCD_EXPOSURE` (for bias frames, it uses the minimum exposure), aborts any exposure in progress, and calls `StartExposure()`.
+2. In `StartExposure()`, start the exposure on the camera, call `PrimaryCCD.setExposureDuration(duration)`, and return `true`. The base class sets `CCD_EXPOSURE` to busy.
+3. While exposing, update the time left with `PrimaryCCD.setExposureLeft()`, typically from `TimerHit()`.
+4. When the camera has finished, read the image into `PrimaryCCD.getFrameBuffer()` while holding the `ccdBufferLock` mutex, release the mutex, and call `ExposureComplete(&PrimaryCCD)`.
+5. The base class encodes and uploads the image, then sets `CCD_EXPOSURE` back to OK.
+
+If the exposure fails, call `PrimaryCCD.setExposureFailed()` instead of `ExposureComplete()`.
+
+> **Important:** `INDI::CCD` uploads images in a background thread. Always lock `ccdBufferLock` while writing to the frame buffer, so that the upload thread never reads a half-written image.
+
+### Sizing the Frame Buffer
+
+The base class uploads an image of `getSubW() / getBinX()` by `getSubH() / getBinY()` pixels. The frame buffer must hold at least that many pixels at the chip's bits per pixel. Recalculate it whenever the frame or binning changes:
+
+```cpp
+uint32_t nbuf = (PrimaryCCD.getSubW() / PrimaryCCD.getBinX()) *
+                (PrimaryCCD.getSubH() / PrimaryCCD.getBinY()) *
+                PrimaryCCD.getBPP() / 8;
+PrimaryCCD.setFrameBufferSize(nbuf);
+```
+
+For RGB images, multiply by 3 and call `PrimaryCCD.setNAxis(3)`.
+
+## Example Implementation
+
+Here's a simplified example of a cooled camera driver. The camera SDK is represented by hypothetical `mycam_*` functions; replace them with your camera's SDK or protocol.
+
+Most camera SDKs manage their own USB connection, so camera drivers usually override `Connect()` and `Disconnect()` instead of using the serial or TCP [connection plugins](../drivers/communications/connection-plugins.md).
+
+### Header (`my_camera.h`)
 
 ```cpp
 #pragma once
 
-#include <indiccd.h>
+#include <libindi/indiccd.h>
+#include <libindi/indielapsedtimer.h>
 
-class MyCameraDriver : public INDI::CCD
+class MyCamera : public INDI::CCD
 {
-public:
-    MyCameraDriver();
-    virtual ~MyCameraDriver() = default;
+    public:
+        MyCamera();
 
-    // DefaultDevice overrides
-    virtual const char *getDefaultName() override;
-    virtual bool initProperties() override;
-    virtual bool updateProperties() override;
-    virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n) override;
-    virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n) override;
+        const char *getDefaultName() override;
+        bool initProperties() override;
+        bool updateProperties() override;
+        bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n) override;
 
-    // Camera specific overrides
-    virtual bool StartExposure(float duration) override;
-    virtual bool AbortExposure() override;
-    virtual bool UpdateCCDFrame(int x, int y, int w, int h) override;
-    virtual bool UpdateCCDBin(int binx, int biny) override;
-    virtual bool UpdateCCDFrameType(CCDChip::CCD_FRAME type) override;
-    virtual bool UpdateCCDCompression(int compression) override;
-    virtual bool UpdateRapidGuide(const char *name, bool enabled) override;
-    virtual bool UpdateCCDTemperature() override;
+    protected:
+        bool Connect() override;
+        bool Disconnect() override;
+        void TimerHit() override;
 
-protected:
-    // Connection overrides
-    virtual bool Connect() override;
-    virtual bool Disconnect() override;
+        bool StartExposure(float duration) override;
+        bool AbortExposure() override;
+        bool UpdateCCDFrame(int x, int y, int w, int h) override;
+        bool UpdateCCDBin(int hor, int ver) override;
+        int SetTemperature(double temperature) override;
 
-    // Helpers
-    void setupParams();
-    void grabImage();
-    static void timerCallback(void *userpointer);
+        void addFITSKeywords(INDI::CCDChip *targetChip, std::vector<INDI::FITSRecord> &fitsKeywords) override;
+        bool saveConfigItems(FILE *fp) override;
 
-private:
-    // Device handle
-    int handle = -1;
+    private:
+        bool setupParams();
+        void updateFrameBufferSize();
+        bool grabImage();
 
-    // Exposure
-    double ExposureRequest = 0;
-    struct timeval ExpStart;
-    bool InExposure = false;
-    int timerID = -1;
+        INDI::PropertyNumber GainNP {1};
 
-    // Temperature
-    double TemperatureRequest = 20.0;
-    bool TemperatureUpdateRunning = false;
+        int m_Handle {-1};
+        bool m_InExposure {false};
+        float m_ExposureRequest {0};
+        INDI::ElapsedTimer m_ExposureTimer;
 };
 ```
 
-### Step 2: Create the Implementation File
-
-Create a file named `mycameradriver.cpp` with the following content:
+### Implementation (`my_camera.cpp`)
 
 ```cpp
-#include "mycameradriver.h"
+#include "my_camera.h"
 
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <memory>
-#include <string.h>
-#include <time.h>
-#include <math.h>
-#include <unistd.h>
-#include <sys/time.h>
+#include <mutex>
 
-// We declare an auto pointer to MyCameraDriver
-static std::unique_ptr<MyCameraDriver> mycamera(new MyCameraDriver());
+static std::unique_ptr<MyCamera> myCamera(new MyCamera());
 
-MyCameraDriver::MyCameraDriver()
+MyCamera::MyCamera()
 {
-    // Set the driver version
     setVersion(1, 0);
-
-    // Set the camera capabilities
-    SetCCDCapability(CCD_CAN_BIN | CCD_CAN_SUBFRAME | CCD_HAS_COOLER | CCD_HAS_SHUTTER);
 }
 
-const char *MyCameraDriver::getDefaultName()
+const char *MyCamera::getDefaultName()
 {
     return "My Camera";
 }
 
-bool MyCameraDriver::initProperties()
+bool MyCamera::initProperties()
 {
-    // Initialize the parent's properties
     INDI::CCD::initProperties();
 
-    // Add debug, simulation, and configuration controls
+    SetCCDCapability(CCD_CAN_ABORT | CCD_CAN_BIN | CCD_CAN_SUBFRAME | CCD_HAS_COOLER | CCD_HAS_SHUTTER);
+
+    // Every camera must add at least one capture format.
+    addCaptureFormat({"INDI_MONO", "Mono", 16, true});
+
+    // Gain is not defined by the base class, so we define it here.
+    GainNP[0].fill("GAIN", "Gain", "%.f", 0, 100, 1, 0);
+    GainNP.fill(getDeviceName(), "CCD_GAIN", "Gain", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
+
+    // The camera supports exposures from 1 ms to 1 hour.
+    PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 3600, 1, false);
+
     addAuxControls();
 
     return true;
 }
 
-bool MyCameraDriver::updateProperties()
+bool MyCamera::updateProperties()
 {
-    // Call the parent's updateProperties
     INDI::CCD::updateProperties();
 
     if (isConnected())
     {
-        // Define properties when connected
-        // These are already defined by the parent class
+        setupParams();
+        defineProperty(GainNP);
     }
     else
     {
-        // Delete properties when disconnected
-        // These are already deleted by the parent class
+        deleteProperty(GainNP);
     }
 
     return true;
 }
 
-bool MyCameraDriver::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
+bool MyCamera::Connect()
 {
-    // Check if the message is for this device
-    if (!strcmp(dev, getDeviceName()))
+    m_Handle = mycam_open();
+    if (m_Handle < 0)
     {
-        // Handle custom number properties here
+        LOG_ERROR("Failed to open the camera. Check that it is connected and powered.");
+        return false;
     }
 
-    // If the message is not for this device or property, call the parent's ISNewNumber
+    // Start polling for exposure progress and temperature.
+    SetTimer(getCurrentPollingPeriod());
+    return true;
+}
+
+bool MyCamera::Disconnect()
+{
+    mycam_close(m_Handle);
+    m_Handle = -1;
+    return true;
+}
+
+bool MyCamera::setupParams()
+{
+    // Sensor: 4144 x 2822 pixels, 16 bits, 4.63 x 4.63 micron pixels.
+    SetCCDParams(4144, 2822, 16, 4.63, 4.63);
+    updateFrameBufferSize();
+    return true;
+}
+
+void MyCamera::updateFrameBufferSize()
+{
+    uint32_t nbuf = (PrimaryCCD.getSubW() / PrimaryCCD.getBinX()) *
+                    (PrimaryCCD.getSubH() / PrimaryCCD.getBinY()) *
+                    PrimaryCCD.getBPP() / 8;
+    PrimaryCCD.setFrameBufferSize(nbuf);
+}
+
+bool MyCamera::StartExposure(float duration)
+{
+    // Keep the shutter closed for dark and bias frames.
+    bool isDark = PrimaryCCD.getFrameType() == INDI::CCDChip::DARK_FRAME ||
+                  PrimaryCCD.getFrameType() == INDI::CCDChip::BIAS_FRAME;
+
+    if (mycam_start_exposure(m_Handle, duration, isDark) != 0)
+    {
+        LOG_ERROR("Failed to start exposure.");
+        return false;
+    }
+
+    m_ExposureRequest = duration;
+    PrimaryCCD.setExposureDuration(duration);
+    m_ExposureTimer.start();
+    m_InExposure = true;
+
+    LOGF_INFO("Taking a %.3f seconds frame...", duration);
+    return true;
+}
+
+bool MyCamera::AbortExposure()
+{
+    mycam_abort_exposure(m_Handle);
+    m_InExposure = false;
+    return true;
+}
+
+bool MyCamera::UpdateCCDFrame(int x, int y, int w, int h)
+{
+    if (x + w > PrimaryCCD.getXRes() || y + h > PrimaryCCD.getYRes())
+    {
+        LOGF_ERROR("Frame (%d,%d) %dx%d is outside the sensor.", x, y, w, h);
+        return false;
+    }
+
+    // The SDK expects the region of interest in binned pixels.
+    if (mycam_set_roi(m_Handle, x / PrimaryCCD.getBinX(), y / PrimaryCCD.getBinY(),
+                      w / PrimaryCCD.getBinX(), h / PrimaryCCD.getBinY()) != 0)
+        return false;
+
+    // Store the new frame in the chip, then resize the frame buffer.
+    INDI::CCD::UpdateCCDFrame(x, y, w, h);
+    updateFrameBufferSize();
+    return true;
+}
+
+bool MyCamera::UpdateCCDBin(int hor, int ver)
+{
+    if (hor != ver || hor > 4)
+    {
+        LOGF_ERROR("%dx%d binning is not supported.", hor, ver);
+        return false;
+    }
+
+    if (mycam_set_binning(m_Handle, hor) != 0)
+        return false;
+
+    // Store the new binning, then apply the current frame with the new binning.
+    INDI::CCD::UpdateCCDBin(hor, ver);
+    return UpdateCCDFrame(PrimaryCCD.getSubX(), PrimaryCCD.getSubY(),
+                          PrimaryCCD.getSubW(), PrimaryCCD.getSubH());
+}
+
+int MyCamera::SetTemperature(double temperature)
+{
+    // Already at the requested temperature.
+    if (std::fabs(temperature - TemperatureNP[0].getValue()) < 0.1)
+        return 1;
+
+    if (mycam_set_temperature(m_Handle, temperature) != 0)
+        return -1;
+
+    // The base class reports completion once TemperatureNP reaches the target.
+    return 0;
+}
+
+void MyCamera::TimerHit()
+{
+    if (!isConnected())
+        return;
+
+    uint32_t nextTimer = getCurrentPollingPeriod();
+
+    if (m_InExposure)
+    {
+        double timeLeft = std::max(0.0, m_ExposureRequest - m_ExposureTimer.elapsed() / 1000.0);
+        PrimaryCCD.setExposureLeft(timeLeft);
+
+        if (mycam_is_image_ready(m_Handle))
+        {
+            m_InExposure = false;
+            grabImage();
+        }
+        else if (timeLeft < 1.0)
+        {
+            // Poll more often near the end of the exposure.
+            nextTimer = 100;
+        }
+    }
+
+    // Report the current temperature. The base class compares it with the target.
+    double temperature = 0;
+    if (HasCooler() && mycam_get_temperature(m_Handle, &temperature) == 0 &&
+            std::fabs(temperature - TemperatureNP[0].getValue()) >= 0.05)
+    {
+        TemperatureNP[0].setValue(temperature);
+        TemperatureNP.apply();
+    }
+
+    SetTimer(nextTimer);
+}
+
+bool MyCamera::grabImage()
+{
+    {
+        // Lock the buffer while writing to it, so the upload thread never reads a partial image.
+        std::unique_lock<std::mutex> guard(ccdBufferLock);
+        if (mycam_read_image(m_Handle, PrimaryCCD.getFrameBuffer(), PrimaryCCD.getFrameBufferSize()) != 0)
+        {
+            guard.unlock();
+            LOG_ERROR("Failed to download image.");
+            PrimaryCCD.setExposureFailed();
+            return false;
+        }
+    }
+
+    LOG_INFO("Download complete.");
+
+    // Encode, upload, and save the image.
+    ExposureComplete(&PrimaryCCD);
+    return true;
+}
+
+bool MyCamera::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
+{
+    if (dev != nullptr && !strcmp(dev, getDeviceName()))
+    {
+        if (GainNP.isNameMatch(name))
+        {
+            if (mycam_set_gain(m_Handle, static_cast<int>(values[0])) != 0)
+            {
+                GainNP.setState(IPS_ALERT);
+                GainNP.apply();
+                return true;
+            }
+
+            GainNP.update(values, names, n);
+            GainNP.setState(IPS_OK);
+            GainNP.apply();
+            saveConfig(GainNP);
+            return true;
+        }
+    }
+
+    // Let the base class handle the standard properties.
     return INDI::CCD::ISNewNumber(dev, name, values, names, n);
 }
 
-bool MyCameraDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
+void MyCamera::addFITSKeywords(INDI::CCDChip *targetChip, std::vector<INDI::FITSRecord> &fitsKeywords)
 {
-    // Check if the message is for this device
-    if (!strcmp(dev, getDeviceName()))
-    {
-        // Handle custom switch properties here
-    }
+    // Add the standard keywords first.
+    INDI::CCD::addFITSKeywords(targetChip, fitsKeywords);
 
-    // If the message is not for this device or property, call the parent's ISNewSwitch
-    return INDI::CCD::ISNewSwitch(dev, name, states, names, n);
+    fitsKeywords.push_back({"GAIN", GainNP[0].getValue(), 0, "Gain"});
 }
 
-bool MyCameraDriver::Connect()
+bool MyCamera::saveConfigItems(FILE *fp)
 {
-    // Call the parent's Connect method
-    bool result = INDI::CCD::Connect();
-
-    if (result)
-    {
-        // Open the device
-        handle = open("/dev/mycamera", O_RDWR);
-        if (handle < 0)
-        {
-            LOG_ERROR("Failed to open device");
-            return false;
-        }
-
-        // Set up the camera parameters
-        setupParams();
-
-        LOG_INFO("Device connected successfully");
-    }
-
-    return result;
-}
-
-bool MyCameraDriver::Disconnect()
-{
-    // Close the device
-    if (handle >= 0)
-    {
-        close(handle);
-        handle = -1;
-    }
-
-    // Call the parent's Disconnect method
-    return INDI::CCD::Disconnect();
-}
-
-void MyCameraDriver::setupParams()
-{
-    // Set the camera parameters
-    // These are the parameters of the camera sensor
-    SetCCDParams(1280, 1024, 16, 5.2, 5.2);
-
-    // Set the minimum exposure time
-    PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 3600, 0.001);
-
-    // Set the image size
-    uint32_t nbuf = PrimaryCCD.getXRes() * PrimaryCCD.getYRes() * PrimaryCCD.getBPP() / 8;
-    PrimaryCCD.setFrameBufferSize(nbuf);
-}
-
-bool MyCameraDriver::StartExposure(float duration)
-{
-    // Check if we're already in an exposure
-    if (InExposure)
-    {
-        LOG_ERROR("Camera is already exposing");
-        return false;
-    }
-
-    // Check if the duration is valid
-    if (duration < PrimaryCCD.getMinX())
-    {
-        LOGF_ERROR("Exposure duration %f is less than minimum %f", duration, PrimaryCCD.getMinX());
-        return false;
-    }
-
-    // Set the exposure duration
-    ExposureRequest = duration;
-
-    // Start the exposure
-    gettimeofday(&ExpStart, nullptr);
-    InExposure = true;
-
-    // Set the timer for the exposure
-    timerID = SetTimer(duration * 1000);
-
-    // Update the exposure status
-    PrimaryCCD.setExposureDuration(duration);
-    PrimaryCCD.setExposureLeft(duration);
-
-    // Log the exposure start
-    LOGF_INFO("Starting exposure of %f seconds", duration);
-
+    INDI::CCD::saveConfigItems(fp);
+    GainNP.save(fp);
     return true;
-}
-
-bool MyCameraDriver::AbortExposure()
-{
-    // Check if we're in an exposure
-    if (!InExposure)
-    {
-        LOG_WARNING("No exposure in progress");
-        return true;
-    }
-
-    // Abort the exposure
-    InExposure = false;
-
-    // Remove the timer
-    if (timerID > 0)
-    {
-        RemoveTimer(timerID);
-        timerID = -1;
-    }
-
-    // Log the exposure abort
-    LOG_INFO("Exposure aborted");
-
-    return true;
-}
-
-bool MyCameraDriver::UpdateCCDFrame(int x, int y, int w, int h)
-{
-    // Check if the frame is valid
-    if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > PrimaryCCD.getXRes() || y + h > PrimaryCCD.getYRes())
-    {
-        LOGF_ERROR("Invalid frame: x=%d, y=%d, w=%d, h=%d", x, y, w, h);
-        return false;
-    }
-
-    // Set the frame
-    PrimaryCCD.setFrame(x, y, w, h);
-
-    // Calculate the new frame buffer size
-    uint32_t nbuf = w * h * PrimaryCCD.getBPP() / 8;
-    PrimaryCCD.setFrameBufferSize(nbuf);
-
-    // Log the frame update
-    LOGF_INFO("Frame updated: x=%d, y=%d, w=%d, h=%d", x, y, w, h);
-
-    return true;
-}
-
-bool MyCameraDriver::UpdateCCDBin(int binx, int biny)
-{
-    // Check if the binning is valid
-    if (binx < 1 || biny < 1 || binx > 4 || biny > 4)
-    {
-        LOGF_ERROR("Invalid binning: %dx%d", binx, biny);
-        return false;
-    }
-
-    // Set the binning
-    PrimaryCCD.setBin(binx, biny);
-
-    // Calculate the new frame buffer size
-    uint32_t nbuf = PrimaryCCD.getSubW() * PrimaryCCD.getSubH() * PrimaryCCD.getBPP() / 8;
-    PrimaryCCD.setFrameBufferSize(nbuf);
-
-    // Log the binning update
-    LOGF_INFO("Binning updated: %dx%d", binx, biny);
-
-    return true;
-}
-
-bool MyCameraDriver::UpdateCCDFrameType(CCDChip::CCD_FRAME type)
-{
-    // Set the frame type
-    PrimaryCCD.setFrameType(type);
-
-    // Log the frame type update
-    LOGF_INFO("Frame type updated: %d", type);
-
-    return true;
-}
-
-bool MyCameraDriver::UpdateCCDCompression(int compression)
-{
-    // Set the compression
-    PrimaryCCD.setCompression(compression);
-
-    // Log the compression update
-    LOGF_INFO("Compression updated: %d", compression);
-
-    return true;
-}
-
-bool MyCameraDriver::UpdateRapidGuide(const char *name, bool enabled)
-{
-    // Check if rapid guide is supported
-    if (strcmp(name, "TELESCOPE_TIMED_GUIDE_WE") && strcmp(name, "TELESCOPE_TIMED_GUIDE_NS") && strcmp(name, "SEND_GUIDE_SECONDARY"))
-    {
-        LOG_ERROR("Rapid guide not supported");
-        return false;
-    }
-
-    // Set the rapid guide
-    RapidGuideEnabled = enabled;
-
-    // Log the rapid guide update
-    LOGF_INFO("Rapid guide updated: %s", enabled ? "enabled" : "disabled");
-
-    return true;
-}
-
-bool MyCameraDriver::UpdateCCDTemperature()
-{
-    // Check if we're already updating the temperature
-    if (TemperatureUpdateRunning)
-        return true;
-
-    // Set the temperature update flag
-    TemperatureUpdateRunning = true;
-
-    // Get the current temperature
-    double temperature = 0;
-    // In a real driver, you would get the temperature from the device
-    // For this example, we'll simulate a temperature that approaches the requested temperature
-    temperature = TemperatureNP[0].getValue() + (TemperatureRequest - TemperatureNP[0].getValue()) * 0.1;
-
-    // Set the temperature
-    TemperatureNP[0].setValue(temperature);
-
-    // Update the temperature status
-    if (fabs(temperature - TemperatureRequest) < 0.1)
-    {
-        TemperatureNP.setState(IPS_OK);
-        TemperatureUpdateRunning = false;
-    }
-    else
-    {
-        TemperatureNP.setState(IPS_BUSY);
-        // Set a timer to update the temperature again
-        SetTimer(1000);
-    }
-
-    // Send the temperature update to the client
-    TemperatureNP.apply();
-
-    return true;
-}
-
-void MyCameraDriver::timerCallback(void *userpointer)
-{
-    // Cast the userpointer to a MyCameraDriver pointer
-    MyCameraDriver *driver = static_cast<MyCameraDriver *>(userpointer);
-
-    // Check if we're in an exposure
-    if (driver->InExposure)
-    {
-        // Check if the exposure is complete
-        struct timeval now;
-        gettimeofday(&now, nullptr);
-        double elapsed = now.tv_sec - driver->ExpStart.tv_sec + (now.tv_usec - driver->ExpStart.tv_usec) / 1e6;
-        if (elapsed >= driver->ExposureRequest)
-        {
-            // Exposure is complete
-            driver->InExposure = false;
-            driver->timerID = -1;
-
-            // Grab the image
-            driver->grabImage();
-        }
-        else
-        {
-            // Exposure is still in progress
-            driver->PrimaryCCD.setExposureLeft(driver->ExposureRequest - elapsed);
-            driver->timerID = driver->SetTimer(100);
-        }
-    }
-    else if (driver->TemperatureUpdateRunning)
-    {
-        // Update the temperature
-        driver->UpdateCCDTemperature();
-    }
-}
-
-void MyCameraDriver::grabImage()
-{
-    // Allocate memory for the image
-    uint8_t *image = PrimaryCCD.getFrameBuffer();
-    uint32_t width = PrimaryCCD.getSubW() / PrimaryCCD.getBinX();
-    uint32_t height = PrimaryCCD.getSubH() / PrimaryCCD.getBinY();
-    uint32_t bpp = PrimaryCCD.getBPP();
-    uint32_t nbuf = width * height * bpp / 8;
-
-    // In a real driver, you would get the image from the device
-    // For this example, we'll generate a simple gradient
-    for (uint32_t y = 0; y < height; y++)
-    {
-        for (uint32_t x = 0; x < width; x++)
-        {
-            uint32_t index = (y * width + x) * bpp / 8;
-            uint16_t value = (x + y) % 65535;
-            if (bpp == 8)
-            {
-                image[index] = value % 255;
-            }
-            else
-            {
-                image[index] = value & 0xFF;
-                image[index + 1] = (value >> 8) & 0xFF;
-            }
-        }
-    }
-
-    // Set the image data
-    PrimaryCCD.setFrameBuffer(image);
-    PrimaryCCD.setFrameBufferSize(nbuf);
-    PrimaryCCD.setResolution(width, height);
-    PrimaryCCD.setNAxis(2);
-    PrimaryCCD.setBPP(bpp);
-
-    // Signal that the exposure is complete
-    ExposureComplete(&PrimaryCCD);
 }
 ```
 
-### Step 3: Create the Main File
-
-Create a file named `main.cpp` with the following content:
-
-```cpp
-#include "mycameradriver.h"
-
-int main(int argc, char *argv[])
-{
-    // Create and initialize the driver
-    std::unique_ptr<MyCameraDriver> mycamera(new MyCameraDriver());
-
-    // Set the driver version
-    mycamera->setVersion(1, 0);
-
-    // Start the driver
-    mycamera->ISGetProperties(nullptr);
-
-    // Run the driver
-    return mycamera->run();
-}
-```
-
-### Step 4: Create the CMakeLists.txt File
-
-Create a file named `CMakeLists.txt` with the following content:
-
-```cmake
-cmake_minimum_required(VERSION 3.0)
-project(indi-mycamera CXX C)
-
-include(GNUInstallDirs)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-
-find_package(INDI REQUIRED)
-find_package(Nova REQUIRED)
-find_package(CFITSIO REQUIRED)
-find_package(ZLIB REQUIRED)
-
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${INDI_INCLUDE_DIR})
-include_directories(${NOVA_INCLUDE_DIR})
-include_directories(${CFITSIO_INCLUDE_DIR})
-
-include(CMakeCommon)
-
-add_executable(indi_mycamera mycameradriver.cpp main.cpp)
-
-target_link_libraries(indi_mycamera ${INDI_LIBRARIES} ${NOVA_LIBRARIES} ${CFITSIO_LIBRARIES} ${ZLIB_LIBRARIES})
-
-install(TARGETS indi_mycamera RUNTIME DESTINATION bin)
-```
-
-### Step 5: Create the XML File
-
-Create a file named `indi_mycamera.xml` with the following content:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<driversList>
-   <devGroup group="CCDs">
-      <device label="My Camera" manufacturer="INDI">
-         <driver name="My Camera">indi_mycamera</driver>
-         <version>1.0</version>
-      </device>
-   </devGroup>
-</driversList>
-```
-
-### Step 6: Build the Driver
-
-To build the driver, create a `build` directory and run CMake:
-
-```bash
-mkdir build
-cd build
-cmake ..
-make
-```
-
-### Step 7: Install the Driver
-
-To install the driver, run:
-
-```bash
-sudo make install
-```
-
-This will install the driver executable to `/usr/bin` and the XML file to `/usr/share/indi`.
-
-### Step 8: Test the Driver
-
-To test the driver, start the INDI server with your driver:
-
-```bash
-indiserver -v indi_mycamera
-```
-
-Then, connect to the INDI server using an INDI client, such as the INDI Control Panel:
-
-```bash
-indi_control_panel
-```
+There is no `main()` function: drivers are linked against `libindidriver`, which provides it and dispatches client requests to your driver through the static instance. See [Creating Custom INDI Drivers](../drivers/basics/custom-driver.md) for the CMake setup and driver XML file.
 
 ## Advanced Topics
 
-### FITS Header
+### Software Binning
 
-The camera interface allows you to add custom FITS header keywords to the image. This can be useful for adding metadata about the image, such as the telescope position, filter used, or other relevant information.
+If the camera cannot bin in hardware, read the full-resolution frame into the buffer and call `PrimaryCCD.binFrame()` (or `binBayerFrame()` for color sensors) before `ExposureComplete()`. In that case, size the frame buffer for the unbinned frame.
 
-To add a FITS header keyword, use the `addFITSKeywords` method:
+### Guide Chip
 
-```cpp
-void MyCameraDriver::addFITSKeywords(fitsfile *fptr, CCDChip *targetChip)
-{
-    // Call the parent's addFITSKeywords
-    INDI::CCD::addFITSKeywords(fptr, targetChip);
+For cameras with a separate guide sensor, call `SetGuiderParams()` once the camera is connected and allocate `GuideCCD`'s frame buffer. Then implement `StartGuideExposure()` and `AbortGuideExposure()`, and call `ExposureComplete(&GuideCCD)` when a guide frame is ready.
 
-    // Add custom keywords
-    int status = 0;
-    fits_update_key_s(fptr, TSTRING, "OBSERVER", "John Doe", "Observer name", &status);
-    fits_update_key_s(fptr, TSTRING, "OBJECT", "M42", "Object name", &status);
-    fits_update_key_s(fptr, TSTRING, "TELESCOP", "My Telescope", "Telescope name", &status);
-}
-```
+### ST4 Guide Port
 
-### Guider Interface
+For cameras with an ST4 port, set `CCD_HAS_ST4_PORT` and implement the four `Guide*()` methods. The base class defines the guide properties and calls your methods. See the [Guider Interface](guider.md) for details.
 
-The camera interface includes support for a guider chip, which can be used for autoguiding. To implement the guider interface, you need to set up the guider parameters and implement the guider-specific methods.
+### Streaming
 
-To set up the guider parameters, use the `SetGuiderParams` method:
+For cameras that support live video, set `CCD_HAS_STREAMING`. The base class creates `Streamer`, an `INDI::StreamManager` that handles streaming and recording. Implement `StartStreaming()` and `StopStreaming()`, and for each video frame:
 
 ```cpp
-void MyCameraDriver::setupParams()
-{
-    // Set the camera parameters
-    SetCCDParams(1280, 1024, 16, 5.2, 5.2);
-
-    // Set the guider parameters
-    SetGuiderParams(512, 512, 16, 5.2, 5.2);
-
-    // ...
-}
+std::unique_lock<std::mutex> guard(ccdBufferLock);
+// Copy the frame into PrimaryCCD.getFrameBuffer()...
+Streamer->newFrame(PrimaryCCD.getFrameBuffer(), frameSize);
 ```
 
-To implement the guider-specific methods, override the `StartGuideExposure` and `AbortGuideExposure` methods:
+Before streaming starts, call `Streamer->setPixelFormat()` and `Streamer->setSize()` to describe the frames.
 
-```cpp
-bool MyCameraDriver::StartGuideExposure(float duration)
-{
-    // Start the guider exposure
-    // ...
-    return true;
-}
+### Temperature Ramp
 
-bool MyCameraDriver::AbortGuideExposure()
-{
-    // Abort the guider exposure
-    // ...
-    return true;
-}
-```
-
-### Streaming Interface
-
-The camera interface includes support for streaming, which can be used for video capture or live viewing. To implement the streaming interface, you need to set the streaming capability and implement the streaming-specific methods.
-
-To set the streaming capability, use the `SetCCDCapability` method:
-
-```cpp
-MyCameraDriver::MyCameraDriver()
-{
-    // Set the driver version
-    setVersion(1, 0);
-
-    // Set the camera capabilities
-    SetCCDCapability(CCD_CAN_BIN | CCD_CAN_SUBFRAME | CCD_HAS_COOLER | CCD_HAS_SHUTTER | CCD_HAS_STREAMING);
-}
-```
-
-To implement the streaming-specific methods, override the `StartStreaming` and `StopStreaming` methods:
-
-```cpp
-bool MyCameraDriver::StartStreaming()
-{
-    // Start the streaming
-    // ...
-    return true;
-}
-
-bool MyCameraDriver::StopStreaming()
-{
-    // Stop the streaming
-    // ...
-    return true;
-}
-```
-
-### Temperature Control
-
-The camera interface includes support for temperature control, which can be used to cool the camera sensor. To implement temperature control, you need to set the temperature capability and implement the temperature-specific methods.
-
-To set the temperature capability, use the `SetCCDCapability` method:
-
-```cpp
-MyCameraDriver::MyCameraDriver()
-{
-    // Set the driver version
-    setVersion(1, 0);
-
-    // Set the camera capabilities
-    SetCCDCapability(CCD_CAN_BIN | CCD_CAN_SUBFRAME | CCD_HAS_COOLER | CCD_HAS_SHUTTER);
-}
-```
-
-To implement the temperature-specific methods, override the `SetTemperature` method:
-
-```cpp
-bool MyCameraDriver::SetTemperature(double temperature)
-{
-    // Set the temperature
-    TemperatureRequest = temperature;
-    TemperatureUpdateRunning = true;
-
-    // Start the temperature update
-    UpdateCCDTemperature();
-
-    return true;
-}
-```
-
-### Simulation Mode
-
-The camera interface includes support for simulation mode, which can be used to test the driver without connecting to the actual hardware. To implement simulation mode, check the `isSimulation()` flag and provide simulated responses.
-
-```cpp
-bool MyCameraDriver::Connect()
-{
-    // Call the parent's Connect method
-    bool result = INDI::CCD::Connect();
-
-    if (result)
-    {
-        // Check if we're in simulation mode
-        if (isSimulation())
-        {
-            LOG_INFO("Simulation mode enabled");
-            handle = 1;
-        }
-        else
-        {
-            // Open the device
-            handle = open("/dev/mycamera", O_RDWR);
-            if (handle < 0)
-            {
-                LOG_ERROR("Failed to open device");
-                return false;
-            }
-        }
-
-        // Set up the camera parameters
-        setupParams();
-
-        LOG_INFO("Device connected successfully");
-    }
-
-    return result;
-}
-```
+When `CCD_TEMP_RAMP` has a non-zero slope, the base class limits each temperature change to that many degrees per minute, and calls `SetTemperature()` repeatedly with intermediate targets. Your `SetTemperature()` implementation does not need to handle ramping.
 
 ## Best Practices
 
-When implementing the camera interface, follow these best practices:
+- **Never block in `StartExposure()`**: Start the exposure and return. Report progress and completion from `TimerHit()` or the SDK's callback.
+- **Lock the frame buffer**: Hold `ccdBufferLock` while writing image data.
+- **Keep the frame buffer size in sync** with the frame, binning, and capture format.
+- **Report temperature regularly** so the base class can tell when the target is reached.
+- **Use the conventional names** for gain, offset, and cooler properties.
+- **Support simulation**: Check `isSimulation()` so the driver can be tested without hardware.
 
-- **Use the appropriate base class** for your device.
-- **Implement simulation mode** to allow testing without hardware.
-- **Provide informative error messages** to help users troubleshoot issues.
-- **Handle connection and disconnection gracefully** to avoid resource leaks.
-- **Update property states** to reflect the current state of the device.
-- **Use appropriate property types** for different kinds of data.
-- **Follow the INDI naming conventions** for properties and elements.
-- **Document your driver** to help users understand how to use it.
-- **Test your driver thoroughly** with different clients and configurations.
+## Real-World Examples
 
-## Conclusion
+The [INDI library](https://github.com/indilib/indi/tree/master/drivers/ccd) and [INDI 3rd party](https://github.com/indilib/indi-3rdparty) repositories contain many camera drivers:
 
-Implementing the camera interface in INDI drivers involves inheriting from the `INDI::CCD` base class, implementing the required methods, and handling device-specific functionality. By following the steps and best practices outlined in this guide, you can create robust and feature-rich camera drivers for your devices.
-
-For more information, refer to the [INDI Library Documentation](https://www.indilib.org/api/index.html) and the [INDI Driver Development Guide](https://www.indilib.org/develop/developer-manual/100-driver-development.html).
+- **CCD Simulator** (`drivers/ccd/ccd_simulator.cpp`): Implements nearly every feature of the interface, including guide chip, streaming, cooling, and Bayer.
+- **Guide Simulator** (`drivers/ccd/guide_simulator.cpp`): A simpler simulator for guide cameras.
+- **ZWO ASI** (`indi-asi` in INDI 3rd party): A full-featured driver for a production camera SDK.

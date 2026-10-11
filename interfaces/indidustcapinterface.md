@@ -195,11 +195,11 @@ public:
             ParkCapSP[DI::CAP_PARK].setState(ISS_ON);
             ParkCapSP[DI::CAP_UNPARK].setState(ISS_OFF);
             ParkCapSP.setState(IPS_OK);
-            IDSetSwitch(&ParkCapSP, nullptr);
+            ParkCapSP.apply();
         }).detach();
 
         ParkCapSP.setState(IPS_BUSY); // Indicate motion in progress
-        IDSetSwitch(&ParkCapSP, nullptr);
+        ParkCapSP.apply();
         return IPS_BUSY;
     }
 
@@ -216,11 +216,11 @@ public:
             ParkCapSP[DI::CAP_PARK].setState(ISS_OFF);
             ParkCapSP[DI::CAP_UNPARK].setState(ISS_ON);
             ParkCapSP.setState(IPS_OK);
-            IDSetSwitch(&ParkCapSP, nullptr);
+            ParkCapSP.apply();
         }).detach();
 
         ParkCapSP.setState(IPS_BUSY); // Indicate motion in progress
-        IDSetSwitch(&ParkCapSP, nullptr);
+        ParkCapSP.apply();
         return IPS_BUSY;
     }
 
@@ -232,7 +232,7 @@ public:
         // For this simulation, we'll just instantly "stop" it.
         // A real abort might also need to stop the simulated thread.
         ParkCapSP.setState(IPS_ALERT); // Indicate motion was interrupted
-        IDSetSwitch(&ParkCapSP, nullptr);
+        ParkCapSP.apply();
         return IPS_OK;
     }
 

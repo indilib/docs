@@ -139,14 +139,14 @@ bool MyCustomDriver::updateProperties()
     if (isConnected())
     {
         // Add the properties to the driver when we connect.
-        defineProperty(&SayHelloSP);
-        defineProperty(&WhatToSayTP);
+        defineProperty(SayHelloSP);
+        defineProperty(WhatToSayTP);
     }
     else
     {
         // And remove them when we disconnect.
-        deleteProperty(SayHelloSP.name);
-        deleteProperty(WhatToSayTP.name);
+        deleteProperty(SayHelloSP);
+        deleteProperty(WhatToSayTP);
     }
 
     return true;
@@ -154,4 +154,4 @@ bool MyCustomDriver::updateProperties()
 ```
 
 So there we have it. We are connected to our actual device (or the simulator). Now
-how do we do things like check status over and over again? Read on in [loops](loops.md).
+how do we do things like check status over and over again? Read on in [loops](../advanced/loops.md).

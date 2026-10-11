@@ -26,7 +26,7 @@ INDI provides several built-in connection plugins:
 |--------|--------|----------|
 | **Serial** | `connectionserial.h` | RS-232, USB-Serial adapters |
 | **TCP** | `connectiontcp.h` | Network devices using TCP |
-| **UDP** | `connectionudp.h` | Network devices using UDP |
+| **UDP** | `connectiontcp.h` | Network devices using UDP (a mode of the TCP plugin) |
 | **I2C** | `connectioni2c.h` | I2C bus devices on Linux |
 
 ## Basic Workflow
@@ -34,7 +34,7 @@ INDI provides several built-in connection plugins:
 The typical workflow for using connection plugins:
 
 1. **Include** the appropriate header file
-2. **Create** an instance of the connection plugin
+2. **Create** an instance of the connection plugin in your driver's `initProperties()`
 3. **Register** the plugin with your driver
 4. **Configure** default settings (optional)
 5. **Register** a handshake function (optional)
@@ -48,11 +48,11 @@ The typical workflow for using connection plugins:
 class MyDriver : public INDI::DefaultDevice
 {
 public:
-    MyDriver()
+    bool initProperties() override
     {
-        // Set default connection mode
-        setConnectionMode(CONNECTION_SERIAL);
+        INDI::DefaultDevice::initProperties();
 
+        // Connection plugins are created in initProperties(), once the device name is known.
         // Create and configure plugin
         serialConnection = new Connection::Serial(this);
         serialConnection->setDefaultBaudRate(Connection::Serial::B_9600);
@@ -63,6 +63,8 @@ public:
 
         // Register with driver
         registerConnection(serialConnection);
+
+        return true;
     }
 
 private:
@@ -129,17 +131,19 @@ You can register multiple connection plugins to give users flexibility:
 class MyDriver : public INDI::DefaultDevice
 {
 public:
-    MyDriver()
+    bool initProperties() override
     {
-        // Default to serial
-        setConnectionMode(CONNECTION_SERIAL);
+        INDI::DefaultDevice::initProperties();
 
+        // Connection plugins are created in initProperties(), once the device name is known.
         // Register multiple options
         serialConnection = new Connection::Serial(this);
         registerConnection(serialConnection);
 
         tcpConnection = new Connection::TCP(this);
         registerConnection(tcpConnection);
+
+        return true;
     }
 
 private:
@@ -214,11 +218,10 @@ bool MyDriver::saveConfigItems(FILE *fp)
 
 ## Next Steps
 
-- **[Serial Connection](serial/)** - Detailed serial communication guide
-- **[TCP Connection](tcp/)** - TCP/IP network communication
-- **[UDP Connection](udp/)** - UDP datagram communication
-- **[I2C Connection](i2c/)** - I2C bus communication
-- **[Creating Custom Plugins](custom-plugins/)** - Build your own plugin
+- **[Serial Connection](serial.md)** - Detailed serial communication guide
+- **[TCP Connection](tcp.md)** - TCP/IP network communication
+- **[UDP Connection](udp.md)** - UDP datagram communication
+- **[I2C Connection](i2c.md)** - I2C bus communication
 
 ## Additional Resources
 
