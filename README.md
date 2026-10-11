@@ -15,31 +15,33 @@ as information on the INDI protocol itself.
 
 This documentation is organized into several sections to help you get started with INDI development:
 
-- **[Guides](guides/)**: General documentation including getting started, best practices, client development, and troubleshooting.
+- **[Getting Started](getting-started/)**: An introduction to INDI, its architecture, and how to get started.
 - **[INDI Server](indiserver/)**: Guide to setting up, configuring, and managing the INDI server.
 - **[Protocol](protocol/)**: Detailed explanation of the INDI protocol, message format, and communication flow.
 - **Driver Development**:
   - **[Basics](drivers/basics/)**: Fundamental concepts for creating INDI drivers
   - **[Advanced](drivers/advanced/)**: Advanced topics for driver development
-  - **[Examples](drivers/examples/)**: Example driver implementations
+  - **[Communications](drivers/communications/)**: Connection plugins and device communication (serial, TCP, USB, etc.)
+  - **[Examples](https://github.com/indilib/docs/tree/master/drivers/examples/)**: Example driver implementations
 - **[Device Interfaces](interfaces/)**: Documentation for implementing various device interfaces (CCD, Telescope, Focuser, etc.).
-- **[Images](images/)**: Diagrams and screenshots illustrating INDI concepts.
+- **[Client Development](clients/)**: Writing INDI clients.
+- **[Support](support/)**: Troubleshooting and getting help.
 
 ### Key Documentation Pages
 
-- [Getting Started with INDI](guides/getting-started.md)
-- [INDI Server Guide](indiserver/indiserver-guide.md)
-- [INDI Protocol Guide](guides/protocol-guide.md)
+- [Getting Started with INDI](getting-started/README.md)
+- [INDI Server Guide](indiserver/README.md)
+- [INDI Protocol Guide](protocol/README.md)
 - [Creating Custom INDI Drivers](drivers/basics/custom-driver.md)
 - [INDI Driver Interface](drivers/basics/driver-interface.md)
-- [INDI Client Development Guide](guides/client-development.md)
-- [INDI Connection Plugins](guides/connection-plugins.md)
+- [INDI Client Development Guide](clients/README.md)
+- [INDI Connection Plugins](drivers/communications/connection-plugins.md)
 - [Implementing the CCD Interface](interfaces/ccd-interface.md)
 - [Implementing the Telescope Interface](interfaces/telescope-interface.md)
 - [Implementing the Focuser Interface](interfaces/focuser.md)
 - [Implementing the Guider Interface](interfaces/guider.md)
-- [INDI Driver Development Best Practices](guides/best-practices.md)
-- [Troubleshooting INDI Drivers](guides/troubleshooting.md)
+- [INDI Driver Development Best Practices](drivers/best-practices.md)
+- [Troubleshooting INDI Drivers](support/troubleshooting.md)
 
 First, some helpful links:
 

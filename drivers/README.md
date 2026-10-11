@@ -97,11 +97,11 @@ For comprehensive guides on INDI driver development, please see the following pa
 
 ### Device Interfaces
 
-- [Connection Plugins](connection-plugins.md): Guide to using connection plugins in INDI drivers
-- [Implementing the CCD Interface](interfaces/ccd-interface.md): Guide to implementing the CCD interface
-- [Implementing the Telescope Interface](interfaces/telescope-interface.md): Guide to implementing the Telescope interface
-- [Implementing the Focuser Interface](interfaces/focuser.md): Guide to implementing the Focuser interface
-- [Implementing the Guider Interface](interfaces/guider.md): Guide to implementing the Guider interface
+- [Connection Plugins](communications/connection-plugins.md): Guide to using connection plugins in INDI drivers
+- [Implementing the CCD Interface](../interfaces/ccd-interface.md): Guide to implementing the CCD interface
+- [Implementing the Telescope Interface](../interfaces/telescope-interface.md): Guide to implementing the Telescope interface
+- [Implementing the Focuser Interface](../interfaces/focuser.md): Guide to implementing the Focuser interface
+- [Implementing the Guider Interface](../interfaces/guider.md): Guide to implementing the Guider interface
 
 ### General Resources
 
@@ -116,13 +116,13 @@ Example drivers can be found at [in the repo for this documentation](https://git
 
 These examples demonstrate how to implement various types of INDI drivers, including:
 
-- [Dummy Dome](examples/indi_dummy_dome/): A simple dome driver
-- [Dummy Dustcap](examples/indi_dummy_dustcap/): A simple dustcap driver
-- [Dummy Filter Wheel](examples/indi_dummy_filterwheel/): A simple filter wheel driver
-- [Dummy Focuser](examples/indi_dummy_focuser/): A simple focuser driver
-- [Dummy GPS](examples/indi_dummy_gps/): A simple GPS driver
-- [Dummy Lightbox](examples/indi_dummy_lightbox/): A simple lightbox driver
-- [My Custom Driver](examples/indi_mycustomdriver/): A template for creating custom drivers
+- [Dummy Dome](https://github.com/indilib/docs/tree/master/drivers/examples/indi_dummy_dome/): A simple dome driver
+- [Dummy Dustcap](https://github.com/indilib/docs/tree/master/drivers/examples/indi_dummy_dustcap/): A simple dustcap driver
+- [Dummy Filter Wheel](https://github.com/indilib/docs/tree/master/drivers/examples/indi_dummy_filterwheel/): A simple filter wheel driver
+- [Dummy Focuser](https://github.com/indilib/docs/tree/master/drivers/examples/indi_dummy_focuser/): A simple focuser driver
+- [Dummy GPS](https://github.com/indilib/docs/tree/master/drivers/examples/indi_dummy_gps/): A simple GPS driver
+- [Dummy Lightbox](https://github.com/indilib/docs/tree/master/drivers/examples/indi_dummy_lightbox/): A simple lightbox driver
+- [My Custom Driver](https://github.com/indilib/docs/tree/master/drivers/examples/indi_mycustomdriver/): A template for creating custom drivers
 
 These examples provide a good starting point for developing your own INDI drivers.
 
@@ -137,7 +137,7 @@ The main advantages of using connection plugins are:
 - **Flexibility**: Drivers can support multiple connection methods without having to implement each one from scratch.
 - **Standardization**: Connection plugins provide a standardized way to handle device connections, making drivers more consistent and easier to use.
 
-For more information, see the [Connection Plugins](connection-plugins.md) guide.
+For more information, see the [Connection Plugins](communications/connection-plugins.md) guide.
 
 ## Standard Properties
 
