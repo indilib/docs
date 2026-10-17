@@ -114,6 +114,9 @@ bool MyDriver::sendCommand(const char *cmd, char *res, int reslen)
 The Serial plugin supports standard baud rates:
 
 ```cpp
+Connection::Serial::B_1200    // 1200 bps
+Connection::Serial::B_2400    // 2400 bps
+Connection::Serial::B_4800    // 4800 bps
 Connection::Serial::B_9600    // 9600 bps
 Connection::Serial::B_19200   // 19200 bps
 Connection::Serial::B_38400   // 38400 bps
